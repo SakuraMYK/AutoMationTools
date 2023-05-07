@@ -142,7 +142,7 @@ QString LogAnalysis::LongestCommonSubstring(QString &a,QString &b) {
     return a.mid(start,max);
 }
 
-
+// 从所有文件中获取测试集的log以及TestMaster的log
 QStringList LogAnalysis::getAllTestSuiteLog()
 {
     QStringList fileList;
