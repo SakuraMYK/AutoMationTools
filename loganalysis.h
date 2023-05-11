@@ -5,7 +5,7 @@
 #include <QTreeWidgetItem>
 #include <QMenu>
 #include <QFileDialog>
-
+#include <QDirIterator>
 namespace Ui
 {
     class LogAnalysis;
@@ -23,7 +23,14 @@ public:
     QString getTestSuiteName(QStringList &fileList);
     QString LongestCommonSubstring(QString &a, QString &b);
 
-    QStringList getAllTestSuiteLog();
+public:
+    struct dirLogs {
+        QString dir;
+        QStringList logList;
+        QStringList tmLogList;
+    };
+
+    QVector<dirLogs> getAllTestSuiteLog();
 
 private:
     Ui::LogAnalysis *ui;

@@ -19,7 +19,16 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
             ui->lineEdit_Dir->setText(historicalPath);
         } });
 
+    // 为首行的每一格文本居中对齐
+    for (int i = 0; i < ui->treeWidget_SearchResult->columnCount(); ++i) {
+        ui->treeWidget_SearchResult->headerItem()->setTextAlignment(i,Qt::AlignCenter);
+    }
 
+    // 设置第一列（index为0）的宽度为自适应文本宽度
+    ui->treeWidget_SearchResult->header()->setSectionResizeMode(0,QHeaderView::ResizeToContents);
+
+
+    ui->lineEdit_Dir->setText("D:\\测试转发组脚本集\\log");
     getAllTestSuiteLog();
 }
 
@@ -30,6 +39,7 @@ LogAnalysis::~LogAnalysis()
 
 void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint& pos)
 {
+//    qDebug() << "into addOtherLogfileContextMenuActionsToItem";
     QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
     QMenu *otherLogs = menu->addMenu("选则其他时间段的log");
     QMenu *openTMLog = menu->addMenu("打开对应的 TestMaster log");
@@ -79,11 +89,11 @@ void LogAnalysis::onAddItemTriggered(QAction* action)
     // ...
 }
 
-QString LogAnalysis::getTestSuiteName(QStringList& fileList) {
+QString LogAnalysis::getTestSuiteName(QStringList& fileNameList) {
 
-    QString str = fileList[0];
-    for (int i = 1; i < fileList.count(); ++i) {
-        str = LongestCommonSubstring(str,fileList[i]);
+    QString str = fileNameList[0];
+    for (int i = 1; i < fileNameList.count(); ++i) {
+        str = LongestCommonSubstring(str,fileNameList[i]);
     }
 
     // 如果以下划线结尾，那么就删掉最后的一个下划线
@@ -143,60 +153,49 @@ QString LogAnalysis::LongestCommonSubstring(QString &a,QString &b) {
 }
 
 // 从所有文件中获取测试集的log以及TestMaster的log
-QStringList LogAnalysis::getAllTestSuiteLog()
+QVector<LogAnalysis::dirLogs> LogAnalysis::getAllTestSuiteLog()
 {
-    QStringList fileList;
+    QMap<QString, QStringList> mapDirFiles;
 
-    fileList
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426185211.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426185211.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426184812.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426184258.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426184258.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_3_20230426184339.xml"
-        << "TS_BAS_GRE_10.1.11.41_20290226881234.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_3_20230426184339.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426165537.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426165537.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_3_20230426165617.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_3_20230426165617.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426163905.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.5_1_1_3_20230426163905.xml"
-        << "TS_BAS_GRE_10.1.11.41_clear_3_20230426164527.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_clear_3_20230426164527.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_3_20230426163945.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_3_20230426163945.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_3_20230426141253.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_3_20230426141253.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.8_1_1_4_20230426135050.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.8_1_1_4_20230426135050.xml"
-        << "TS_BAS_GRE_10.1.11.41_clear_4_20230426135817.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_clear_4_20230426135817.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_4_20230426135149.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_4_20230426135149.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_20230426082637.xml"
-        << "TS_BAS_GRE_10.1.11.41_20230426082637.xml"
-        << "TS_BAS_GRE_10.1.11.41_clear_4_20230426092744.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.8_1_1_4_20230426093155.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.108.8_1_1_4_20230426093155.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_clear_4_20230426092744.xml"
-        << "TS_BAS_GRE_10.1.11.41_setup_4_20230426092439.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_20230426081234.xml"
-        << "TS_BAS_GRE_10.1.11.41_20230426886521.xml"
-        << "TestMaster_TS_BAS_GRE_10.1.11.41_setup_4_20230426092439.xml"
-        << "TS_BAS_GRE_10.1.11.41_clear_3_20230426092206.xml"
-        << "TS_BAS_GRE_10.1.11.41.2.108.7_1_1_3_20230426092206.xml";
+    dirLogs dirlog;
+    QVector<dirLogs> allXmlFiles;
 
-//    qDebug() << getTestSuiteName(fileList);
-    QRegularExpression re_TstName("^" + getTestSuiteName(fileList) + "_(\\d{14})\\.xml");
-    for(QString & file:fileList)
+    QDir dir(ui->lineEdit_Dir->text(),"*.xml");
+    QDirIterator it(dir,QDirIterator::Subdirectories);
+
+    // 迭代遍历所有目录下的文件、以及子目录下的文件（迭代器默认只遍历文件）
+    while (it.hasNext())
     {
-        if(re_TstName.match(file).hasMatch())
-        {
-            qDebug() <<file;
-        }
+        it.next();
+        // 只能传入文件名，不能传入绝对路径或相对路径，否则会计算出绝对路径里比tst名更长的子串
+        mapDirFiles[it.fileInfo().dir().absolutePath()] << it.fileName();
     }
-    return QStringList();
+
+    for (QMap<QString, QStringList>::Iterator i = mapDirFiles.begin(); i != mapDirFiles.end(); ++i) {
+        QRegularExpression re_logName("^" + getTestSuiteName(i.value()) + "_(\\d{14})\\.xml");
+        QRegularExpression re_TMLogName("^TestMaster_" + getTestSuiteName(i.value()) + "_(\\d{14})\\.xml");
+        dirlog.dir = i.key();
+        for (QString & file : i.value()) {
+            if(re_TMLogName.match(file).hasMatch())
+            {
+                dirlog.logList << i.key() + "/" + file;
+            }
+            else if(re_logName.match(file).hasMatch())
+            {
+                dirlog.tmLogList << i.key() + "/" + file;
+            }
+        }
+        allXmlFiles.append(dirlog);
+        dirlog.logList.clear();
+        dirlog.tmLogList.clear();
+    }
+
+//    for (const auto & tt: allXmlFiles)
+//    {
+//        qDebug() << "==============";
+//        qDebug() << "目录：      " << tt.dir;
+//        qDebug() << "log文件：   " << tt.logList;
+//        qDebug() << "TM log文件：" << tt.tmLogList;
+//    }
+    return allXmlFiles;
 }
