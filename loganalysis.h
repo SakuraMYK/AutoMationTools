@@ -22,15 +22,8 @@ public:
     void onAddItemTriggered(QAction *action);
     QString getTestSuiteName(QStringList &fileList);
     QString LongestCommonSubstring(QString &a, QString &b);
-
-public:
-    struct dirLogs {
-        QString dir;
-        QStringList logList;
-        QStringList tmLogList;
-    };
-
-    QVector<dirLogs> getAllTestSuiteLog();
+    void updateTreeWidget();
+    QMap<QString,QMap<QString,QVariant>> getAllLogFiles();
 
 private:
     Ui::LogAnalysis *ui;
