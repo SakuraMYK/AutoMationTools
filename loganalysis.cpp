@@ -7,7 +7,7 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
     ui->pushButton_SelectDir->setIcon(QIcon(":/ico/folder.ico"));
     ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, &LogAnalysis::addOtherLogfileContextMenuActionsToItem);
-
+    connect(ui->pushButton_Statistics,&QPushButton::clicked,this,&LogAnalysis::updateTreeWidget);
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
             {
         if  (historicalPath.isEmpty()){
@@ -27,11 +27,11 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
     // 设置第一列（index为0）的宽度为自适应文本宽度
     ui->treeWidget_SearchResult->header()->setSectionResizeMode(0,QHeaderView::ResizeToContents);
 
-
-
     ui->lineEdit_Dir->setText("D:\\测试转发组脚本集\\log");
-    getAllLogFiles();
-//    updateTreeWidget();
+    createAllLogInfoDictionary();
+
+    QString file = "D:\\测试转发组脚本集\\log\\GRE\\TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml";
+    getTestSuiteLogContent(file);
 }
 
 LogAnalysis::~LogAnalysis()
@@ -44,47 +44,41 @@ void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint& pos)
     // 获取被点击的 QTreeWidgetItem
     QTreeWidgetItem* item = ui->treeWidget_SearchResult->itemAt(pos);
 
-    QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
+    if (item != nullptr && allLogInfo.contains(item->text(0)))
+    {
+        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
+        QMenu *logs = menu->addMenu("切换其他时间段的log");
+        QAction* openTmLog = new QAction("打开对应的TestMaster log", logs);
+        connect(openTmLog, &QAction::triggered, this, [=]() { onAddItemTriggered(openTmLog); });
 
-    QMenu *otherLogs = menu->addMenu("选则其他时间段的log");
-    QMenu *openTMLog = menu->addMenu("对应的TestMaster log");
+        for(const QString & startTime:allLogInfo[item->text(0)]["startTime"].toStringList())
+        {
+            QAction* addAction = new QAction( startTime, logs);
 
-    QAction* addAction1 = new QAction("log1", ui->treeWidget_SearchResult);
-    QAction* addAction2 = new QAction("log2", ui->treeWidget_SearchResult);
-    QAction* addAction3 = new QAction("log3", ui->treeWidget_SearchResult);
-    QAction* addAction4 = new QAction("log4", ui->treeWidget_SearchResult);
+            // 将 item 作为上下文数据传递给 QAction 对象
+            addAction->setData(QVariant::fromValue(item));
 
-    QAction* addAction_OpenTMLog = new QAction("TM log", ui->treeWidget_SearchResult);
+            // 连接信号和槽函数，并将 QAction 对象作为参数传递
+            connect(addAction, &QAction::triggered, this, [=]() { onAddItemTriggered(addAction); });
 
-
-    // 将 item 作为上下文数据传递给 QAction 对象
-    addAction1->setData(QVariant::fromValue(item));
-    addAction2->setData(QVariant::fromValue(item));
-    addAction3->setData(QVariant::fromValue(item));
-    addAction4->setData(QVariant::fromValue(item));
-
-    // 连接信号和槽函数，并将 QAction 对象作为参数传递
-    connect(addAction1, &QAction::triggered, this, [=]() { onAddItemTriggered(addAction1); });
-    connect(addAction2, &QAction::triggered, this, [=]() { onAddItemTriggered(addAction2); });
-    connect(addAction3, &QAction::triggered, this, [=]() { onAddItemTriggered(addAction3); });
-    connect(addAction4, &QAction::triggered, this, [=]() { onAddItemTriggered(addAction4); });
-
-    otherLogs->addAction(addAction1);
-    otherLogs->addAction(addAction2);
-    otherLogs->addAction(addAction3);
-    otherLogs->addAction(addAction4);
-
-    openTMLog->addAction(addAction_OpenTMLog);
-    menu->exec(ui->treeWidget_SearchResult->mapToGlobal(pos));
+            logs->addAction(addAction);
+        }
+        menu->addAction(openTmLog);
+        menu->exec(ui->treeWidget_SearchResult->mapToGlobal(pos));
+    }
+    else
+    {
+        qDebug() << "当前右键选中的不是 allLogInfo 中存在的键!";
+    }
 
 }
 
 void LogAnalysis::onAddItemTriggered(QAction* action)
 {
     // 获取 QAction 对象中保存的上下文数据
-    QTreeWidgetItem* item = action->data().value<QTreeWidgetItem*>();
-    item->setText(0,action->text());
-    qDebug() << "当前选中的是：" << item;
+//    QTreeWidgetItem* item = action->data().value<QTreeWidgetItem*>();
+
+    qDebug() << "当前选中：" << action->text();
     // 同时更新子控件下对应的所有文件信息
     // ...
 }
@@ -153,16 +147,8 @@ QString LogAnalysis::LongestCommonSubstring(QString &a,QString &b) {
 }
 
 // 从指定目录中获取所有测试集的log以及TestMaster的log
-QMap<QString,QMap<QString,QVariant>> LogAnalysis::getAllLogFiles()
+QMap<QString,QMap<QString,QVariant>> LogAnalysis::createAllLogInfoDictionary()
 {
-    // 定义一个数据结构，存放每个xml对应的各项内容
-    //    模块名 {
-    //        目录： XXX
-    //        开始时间： XXX
-    //        log文件列表： XXX XXX XXX
-    //        TM log文件列表： XXX XXX XXX XXX
-    //    }
-    QMap<QString,QMap<QString,QVariant>> allLogInfo;
 
     QMap<QString, QStringList> mapDirFiles;
 
@@ -194,12 +180,12 @@ QMap<QString,QMap<QString,QVariant>> LogAnalysis::getAllLogFiles()
         for (QString & file : mapDirFiles[dir]) {
             if(re_TMLogName.match(file).hasMatch())
             {
-                logList << dir + "/" + file;
+                tmLogList << dir + "/" + file;
                 startTimeList << QDateTime::fromString(file.mid(file.lastIndexOf('_') + 1,14), "yyyyMMddhhmmss").toString("yyyy/MM/dd hh:mm:ss");
             }
             else if(re_logName.match(file).hasMatch())
             {
-                tmLogList << dir + "/" + file;
+                logList << dir + "/" + file;
                 startTimeList << QDateTime::fromString(file.mid(file.lastIndexOf('_') + 1,14), "yyyyMMddhhmmss").toString("yyyy/MM/dd hh:mm:ss");
             }
         }
@@ -213,10 +199,17 @@ QMap<QString,QMap<QString,QVariant>> LogAnalysis::getAllLogFiles()
         startTimeList.clear();
     }
 
+    return allLogInfo;
+}
+
+void LogAnalysis::updateTreeWidget()
+{
     // 信息打印
     const QStringList & allLogInfoKeys = allLogInfo.keys();
     for (const QString & key: allLogInfoKeys)
     {
+        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
+        item->setText(0,key);
         qDebug() <<"========================================";
         qDebug() << "模块：     " << key;
         qDebug() << "目录：     "<<allLogInfo[key]["dir"].toString();
@@ -224,20 +217,70 @@ QMap<QString,QMap<QString,QVariant>> LogAnalysis::getAllLogFiles()
         qDebug() << "logList：  "<<allLogInfo[key]["logList"].toStringList();
         qDebug() << "tmLogList："<<allLogInfo[key]["tmLogList"].toStringList();
     }
-
-    return allLogInfo;
 }
 
-void LogAnalysis::updateTreeWidget()
+
+// 抓取测试套的统计信息
+QMap<QString,QString> LogAnalysis::getTestSuiteLogContent (const QString&filePath)
 {
-//    for (auto&log:getAllLogFiles())
-//    {
-//        for (QString & file:log.logList)
-//        {
-//            QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-//            QFileInfo fileInfo(file);
-//            item->setText(0,fileInfo.fileName().mid(0,fileInfo.fileName().length() - 19));
-//            break;
-//        }
-//    }
+
+    QMap<QString,QString>map;
+    QFile file(filePath);
+    if(!file.open(QFile::ReadOnly| QFile::Text))
+    {
+        qDebug() << "failed to open"<<filePath;
+        return map;
+    }
+    QString xmlContent = file.readAll();
+    static QRegularExpression re_OK_Num("<SECTION>\\s*<TITLE>OK<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
+    static QRegularExpression re_NG_Num("<SECTION>\\s*<TITLE>NG<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
+    static QRegularExpression re_ER_Num("<SECTION>\\s*<TITLE>ER<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
+    static QRegularExpression re_InvalidHead_Num("<SECTION>\\s*<TITLE>Invalid Head<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
+    static QRegularExpression re_UseTime("<CONTENT type = \"text\"><!\\[CDATA\\[(.*?)\\]\\]></CONTENT>");
+    if (re_OK_Num.match(xmlContent).hasMatch())
+    {
+        map["OK"]=re_OK_Num.match(xmlContent).captured(1);
+    }
+    if (re_NG_Num.match(xmlContent).hasMatch())
+    {
+        map["NG"]=re_NG_Num.match(xmlContent).captured(1);
+    }
+    if (re_ER_Num.match(xmlContent).hasMatch())
+    {
+        map["ER"]=re_ER_Num.match(xmlContent).captured(1);
+    }
+    if (re_InvalidHead_Num.match(xmlContent).hasMatch())
+    {
+        map["Invalid Head"]=re_InvalidHead_Num.match(xmlContent).captured(1);
+    }
+    if (re_UseTime.match(xmlContent).hasMatch())
+    {
+        map["Use Time"]=re_UseTime.match(xmlContent).captured(1);
+    }
+    qDebug() <<map;
+    return map;
+}
+
+// 抓取测试脚本的细节信息
+QMap<QString,QString> LogAnalysis::getScriptLogContent(const QString&filePath)
+{
+    QMap<QString,QString>map;
+    QFile file(filePath);
+    if(!file.open(QFile::ReadOnly| QFile::Text))
+    {
+        qDebug() << "failed to open"<<filePath;
+        return map;
+    }
+    QString xmlContent = file.readAll();
+    static QRegularExpression re_isTestCaseEnd("<CONTENT type = \"text\"><!\\[CDATA\\[TestCase End\\]\\]></CONTENT>");
+    if (re_isTestCaseEnd.match(xmlContent).hasMatch())
+    {
+        map["isTestCaseEnd"]="true";
+    }
+    else {
+        map["isTestCaseEnd"] ="false";
+    }
+    qDebug() <<map;
+    return map;
+
 }

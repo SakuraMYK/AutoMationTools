@@ -6,6 +6,8 @@
 #include <QMenu>
 #include <QFileDialog>
 #include <QDirIterator>
+
+
 namespace Ui
 {
     class LogAnalysis;
@@ -23,11 +25,14 @@ public:
     QString getTestSuiteName(QStringList &fileList);
     QString LongestCommonSubstring(QString &a, QString &b);
     void updateTreeWidget();
-    QMap<QString,QMap<QString,QVariant>> getAllLogFiles();
+    QMap<QString,QMap<QString,QVariant>> createAllLogInfoDictionary();
+    QMap<QString,QString> getTestSuiteLogContent(const QString&filePath);
+    QMap<QString,QString> getScriptLogContent(const QString&filePath);
 
 private:
     Ui::LogAnalysis *ui;
     QString historicalPath;
+    QMap<QString,QMap<QString,QVariant>> allLogInfo;
 };
 
 #endif // LOGANALYSIS_H
