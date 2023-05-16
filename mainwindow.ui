@@ -30,7 +30,14 @@
     <addaction name="action_Create_Test_Case_Suite"/>
     <addaction name="action_Log_Analysis"/>
    </widget>
+   <widget class="QMenu" name="menudebug">
+    <property name="title">
+     <string>debug</string>
+    </property>
+    <addaction name="action_Debug"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menudebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Create_Test_Case_Suite">
@@ -41,6 +48,11 @@
   <action name="action_Log_Analysis">
    <property name="text">
     <string>Log Analysis</string>
+   </property>
+  </action>
+  <action name="action_Debug">
+   <property name="text">
+    <string>debug</string>
    </property>
   </action>
  </widget>

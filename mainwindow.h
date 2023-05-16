@@ -6,6 +6,7 @@
 #include <QStackedWidget>
 #include "testsuite.h"
 #include "loganalysis.h"
+#include "debuginfo.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,12 +20,18 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    static void debugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
 
 private:
     Ui::MainWindow *ui;
     QStackedWidget *stackedWidget;
     TestSuite *testSuite;
     LogAnalysis *logAnalysis;
+    DebugInfo *debugInfo;
+    static MainWindow* instance;
+
+signals:
+    void sendDebugOutput(const QString& message);
 };
 
 #endif // MAINWINDOW_H
