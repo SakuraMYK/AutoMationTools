@@ -1,10 +1,9 @@
 #include "loganalysis.h"
 #include "ui_loganalysis.h"
 
-LogAnalysis::LogAnalysis(DebugInfo *debugInfo, QWidget *parent) : QWidget(parent), ui(new Ui::LogAnalysis)
+LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnalysis)
 {
     ui->setupUi(this);
-    debug = debugInfo;
     ui->pushButton_SelectDir->setIcon(QIcon(":/ico/folder.ico"));
     ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, &LogAnalysis::addOtherLogfileContextMenuActionsToItem);
@@ -30,7 +29,7 @@ LogAnalysis::LogAnalysis(DebugInfo *debugInfo, QWidget *parent) : QWidget(parent
     ui->treeWidget_SearchResult->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     ui->lineEdit_Dir->setText("D:\\测试转发组脚本集\\log");
-    createAllLogInfoDictionary();
+
 
     //    QString file = "D:\\测试转发组脚本集\\log\\GRE\\TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml";
     //    getTestSuiteLogContent(file);
@@ -39,7 +38,6 @@ LogAnalysis::LogAnalysis(DebugInfo *debugInfo, QWidget *parent) : QWidget(parent
 LogAnalysis::~LogAnalysis()
 {
     delete ui;
-    delete debug;
 }
 
 void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint &pos)
@@ -167,6 +165,7 @@ QMap<QString, QMap<QString, QVariant>> LogAnalysis::createAllLogInfoDictionary()
     QMap<QString, QStringList> mapDirFiles;
 
     QDir dir(ui->lineEdit_Dir->text(), "*.xml");
+    qDebug() << "select dir:"<<dir;
     QDirIterator it(dir, QDirIterator::Subdirectories);
 
     // 迭代遍历所有目录下的文件、以及子目录下的文件（迭代器默认只遍历文件）
@@ -175,6 +174,12 @@ QMap<QString, QMap<QString, QVariant>> LogAnalysis::createAllLogInfoDictionary()
         it.next();
         // 只能传入文件名，不能传入绝对路径或相对路径，否则可能会计算出比tst名更长的子串
         mapDirFiles[it.fileInfo().dir().absolutePath()] << it.fileName();
+    }
+
+    if(mapDirFiles.isEmpty())
+    {
+        qDebug() << "No log file found!";
+        return allLogInfo;
     }
 
     QString tstName;
@@ -218,28 +223,9 @@ QMap<QString, QMap<QString, QVariant>> LogAnalysis::createAllLogInfoDictionary()
     return allLogInfo;
 }
 
-void LogAnalysis::updateTreeWidget()
-{
-
-    // 信息打印
-    const QStringList &allLogInfoKeys = allLogInfo.keys();
-    for (const QString &key : allLogInfoKeys)
-    {
-        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        item->setText(0, key);
-        qDebug() << "========================================";
-        qDebug() << "模块：     " << key;
-        qDebug() << "目录：     " << allLogInfo[key]["dir"].toString();
-        qDebug() << "开始时间：  " << allLogInfo[key]["startTime"].toStringList();
-        qDebug() << "logList：  " << allLogInfo[key]["logList"].toStringList();
-        qDebug() << "tmLogList：" << allLogInfo[key]["tmLogList"].toStringList();
-    }
-}
-
 // 抓取测试套的统计信息
 QMap<QString, QString> LogAnalysis::getTestSuiteLogContent(const QString &filePath)
 {
-
     QMap<QString, QString> map;
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -303,3 +289,65 @@ QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
 
     return map;
 }
+
+
+QStringList LogAnalysis::getAllTclScriptsFromLog(const QString& logFilePath)
+{
+    QStringList tclScripts;
+    static QRegularExpression re_ExecuteTclFile("<a href=.*>(.*?)</a>");
+    // 打开日志文件并逐行读取
+    QFile file(logFilePath);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&file);
+        while (!in.atEnd())
+        {
+            QRegularExpressionMatch re =re_ExecuteTclFile.match(in.readLine());
+            if(re.hasMatch())
+            {
+                tclScripts << re.captured(1);
+            }
+        }
+        file.close();
+    }
+    else
+    {
+        qDebug() << logFilePath << "does not exist or cannot be opened";
+    }
+    return tclScripts;
+}
+
+
+
+void LogAnalysis::updateTreeWidget()
+{
+    QStringList allTclScripts;
+    createAllLogInfoDictionary();
+    // 信息打印
+    const QStringList &allLogInfoKeys = allLogInfo.keys();
+    for (const QString &key : allLogInfoKeys)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
+        item->setText(0, key);
+        item->setIcon(0,QIcon(":/ico/tst.ico"));
+
+        qDebug() << "========================================";
+        qDebug() << "tst:            " << key;
+        qDebug() << "dir:            " << allLogInfo[key]["dir"].toString();
+        qDebug() << "startTime:      " << allLogInfo[key]["startTime"].toStringList();
+        qDebug() << "logList:        " << allLogInfo[key]["logList"].toStringList();
+        qDebug() << "tmLogList:      " << allLogInfo[key]["tmLogList"].toStringList();
+
+        for(const QString& logFile:allLogInfo[key]["logList"].toStringList())
+        {
+            allTclScripts = getAllTclScriptsFromLog(logFile);
+            for(const QString&tclFile:allTclScripts)
+            {
+                QTreeWidgetItem *tcl = new QTreeWidgetItem(item);
+                tcl->setText(0,tclFile);
+                tcl->setIcon(0,QIcon(":/ico/tcl.ico"));
+            }
+        }
+    }
+}
+

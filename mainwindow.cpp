@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
             {
             if (!logAnalysis)
             {
-                logAnalysis = new LogAnalysis(debugInfo,this);
+                logAnalysis = new LogAnalysis(this);
             }
             stackedWidget->addWidget(logAnalysis);
             stackedWidget->setCurrentWidget(logAnalysis);

@@ -3,5 +3,7 @@
         <file>file.ico</file>
         <file>folder.ico</file>
         <file>folder_open.ico</file>
+        <file>tst.ico</file>
+        <file>tcl.ico</file>
     </qresource>
 </RCC>

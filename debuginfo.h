@@ -2,6 +2,7 @@
 #define DEBUGINFO_H
 
 #include <QWidget>
+#include <QShortcut>
 
 namespace Ui {
 class DebugInfo;
@@ -19,6 +20,7 @@ public:
 
 private:
     Ui::DebugInfo *ui;
+
 };
 
 #endif // DEBUGINFO_H
