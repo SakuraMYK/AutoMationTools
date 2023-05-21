@@ -34,6 +34,8 @@ private:
     Ui::LogAnalysis *ui;
     QString historicalPath;
     QMap<QString,QMap<QString,QVariant>> allLogInfo;
+    QString curTime;
+    bool isExpandAll;
 };
 
 #endif // LOGANALYSIS_H

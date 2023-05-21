@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1040</width>
-    <height>529</height>
+    <width>1151</width>
+    <height>526</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,106 +15,117 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <widget class="QPushButton" name="pushButton_ExpandAll">
+       <property name="text">
+        <string>展开</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QLineEdit" name="lineEdit_Dir"/>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLineEdit" name="lineEdit_Dir"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_SelectDir">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_Statistics">
+           <property name="text">
+            <string>统计</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_ExportExcel">
+           <property name="text">
+            <string>导出</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_SelectDir">
-         <property name="text">
-          <string/>
+        <widget class="QTreeWidget" name="treeWidget_SearchResult">
+         <property name="toolTipDuration">
+          <number>-1</number>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_Statistics">
-         <property name="text">
-          <string>统计</string>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_ExportExcel">
-         <property name="text">
-          <string>导出</string>
+         <property name="autoFillBackground">
+          <bool>false</bool>
          </property>
+         <property name="alternatingRowColors">
+          <bool>false</bool>
+         </property>
+         <property name="textElideMode">
+          <enum>Qt::ElideLeft</enum>
+         </property>
+         <attribute name="headerMinimumSectionSize">
+          <number>38</number>
+         </attribute>
+         <column>
+          <property name="text">
+           <string>测试集</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>开始时间</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>用时</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>OK</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>NG</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>新建列</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>非法头</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>core文件</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>总数</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>通过率</string>
+          </property>
+         </column>
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QTreeWidget" name="treeWidget_SearchResult">
-       <property name="toolTipDuration">
-        <number>-1</number>
-       </property>
-       <property name="layoutDirection">
-        <enum>Qt::LeftToRight</enum>
-       </property>
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="alternatingRowColors">
-        <bool>false</bool>
-       </property>
-       <property name="textElideMode">
-        <enum>Qt::ElideLeft</enum>
-       </property>
-       <attribute name="headerMinimumSectionSize">
-        <number>38</number>
-       </attribute>
-       <column>
-        <property name="text">
-         <string>测试集</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>开始时间</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>用时</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>OK</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>NG</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>新建列</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>非法头</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>core文件</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>总数</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>通过率</string>
-        </property>
-       </column>
-      </widget>
      </item>
     </layout>
    </item>

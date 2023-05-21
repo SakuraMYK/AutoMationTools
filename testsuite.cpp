@@ -486,7 +486,7 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
             {
                 item->setCheckState(0, Qt::Unchecked);
             }
-            item->setToolTip(0, io.readFile(file));
+            item->setToolTip(0, io.readFile(file).mid(0,1000));
         }
         ++i;
     }

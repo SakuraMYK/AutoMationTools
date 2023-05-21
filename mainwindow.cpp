@@ -1,7 +1,6 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 MainWindow* MainWindow::instance = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -20,23 +19,28 @@ MainWindow::MainWindow(QWidget *parent)
             if (!testSuite)
             {
                 testSuite = new TestSuite(this);
+                stackedWidget->addWidget(testSuite);
             }
-            stackedWidget->addWidget(testSuite);
             stackedWidget->setCurrentWidget(testSuite);
-            setCentralWidget(stackedWidget); });
+            this->setCentralWidget(stackedWidget);
+    });
+
     connect(ui->action_Log_Analysis, &QAction::triggered, this, [&]()
             {
-            if (!logAnalysis)
-            {
-                logAnalysis = new LogAnalysis(this);
-            }
-            stackedWidget->addWidget(logAnalysis);
-            stackedWidget->setCurrentWidget(logAnalysis);
-            setCentralWidget(stackedWidget); });
+                if (!logAnalysis)
+                {
+                    logAnalysis = new LogAnalysis(this);
+                    stackedWidget->addWidget(logAnalysis);
+                }
+                stackedWidget->setCurrentWidget(logAnalysis);
+                this->setCentralWidget(stackedWidget);
+            });
+
     connect(ui->action_Debug, &QAction::triggered, this, [&]()
             {
             debugInfo->setWindowTitle("debug");
-            debugInfo->show(); });
+            debugInfo->show();
+    });
 
     instance = this;
     qInstallMessageHandler(&MainWindow::debugMessageHandler);
