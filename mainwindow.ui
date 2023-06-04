@@ -32,30 +32,43 @@
    </widget>
    <widget class="QMenu" name="menudebug">
     <property name="title">
-     <string>debug</string>
+     <string>其他</string>
     </property>
     <addaction name="action_Debug"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menudebug"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Create_Test_Case_Suite">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/ico/createTst.ico</normaloff>:/ico/createTst.ico</iconset>
+   </property>
    <property name="text">
     <string>Create Test Case Suite</string>
    </property>
   </action>
   <action name="action_Log_Analysis">
+   <property name="icon">
+    <iconset theme="accessories-text-editor" resource="icon.qrc">
+     <normaloff>:/ico/log.ico</normaloff>:/ico/log.ico</iconset>
+   </property>
    <property name="text">
     <string>Log Analysis</string>
    </property>
   </action>
   <action name="action_Debug">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/ico/debug.ico</normaloff>:/ico/debug.ico</iconset>
+   </property>
    <property name="text">
     <string>debug</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="icon.qrc"/>
+ </resources>
  <connections/>
 </ui>

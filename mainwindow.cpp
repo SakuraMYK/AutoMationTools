@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     ui->setupUi(this);
+    this->setWindowIcon(QIcon(":/ico/winTitle.ico"));
 
     testSuite = nullptr;
     logAnalysis = nullptr;
@@ -40,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
             {
             debugInfo->setWindowTitle("debug");
             debugInfo->show();
+            debugInfo->raise();
     });
 
     instance = this;

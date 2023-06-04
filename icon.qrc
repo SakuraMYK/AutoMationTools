@@ -6,5 +6,11 @@
         <file>tst.ico</file>
         <file>tcl.ico</file>
         <file>file_tcl.ico</file>
+        <file>winTitle.ico</file>
+        <file>log.ico</file>
+        <file>createTst.ico</file>
+        <file>debug.ico</file>
+        <file>Expand.ico</file>
+        <file>Collapse.ico</file>
     </qresource>
 </RCC>

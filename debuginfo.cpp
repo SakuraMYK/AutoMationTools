@@ -22,7 +22,7 @@ DebugInfo::~DebugInfo()
 
 void DebugInfo::append(const QString & text)
 {
-    ui->textEdit_Debug->append(text);
+    ui->textEdit_Debug->append("["+QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz")+ "] " + text);
 }
 
 

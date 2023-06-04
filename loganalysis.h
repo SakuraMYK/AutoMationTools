@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QDirIterator>
 #include <QTextEdit>
+#include <QProgressDialog>
 
 namespace Ui
 {
@@ -22,19 +23,18 @@ public:
     ~LogAnalysis();
     void addOtherLogfileContextMenuActionsToItem(const QPoint &pos);
     void onAddItemTriggered(QAction *action);
-    QString getTestSuiteName(QStringList &fileList);
     QString LongestCommonSubstring(QString &a, QString &b);
     void updateTreeWidget();
-    QMap<QString,QMap<QString,QVariant>> createAllLogInfoDictionary();
-    QMap<QString,QString> getTestSuiteLogContent(const QString&filePath);
+    QStringList getTestSuiteInfo(const QString&filePath);
     QMap<QString,QString> getScriptLogContent(const QString&filePath);
-    QStringList getAllTclScriptsFromLog(const QString &logFilePath);
+    QStringList getAllTclFromTestSuite(const QString &xmlPath);
+    QStringList getAllTestSuiteXML(const QString &dir);
+    void openXML(const QString&xml);
+    void onTriggered(const QPoint &pos);
 
 private:
     Ui::LogAnalysis *ui;
     QString historicalPath;
-    QMap<QString,QMap<QString,QVariant>> allLogInfo;
-    QString curTime;
     bool isExpandAll;
 };
 

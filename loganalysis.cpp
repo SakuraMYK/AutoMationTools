@@ -3,11 +3,12 @@
 
 LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnalysis)
 {
-    isExpandAll = false;
     ui->setupUi(this);
+    isExpandAll = false;
+    ui->pushButton_ExpandAll->setIconSize(QSize(32, 32));
     ui->pushButton_SelectDir->setIcon(QIcon(":/ico/folder.ico"));
-    ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, &LogAnalysis::addOtherLogfileContextMenuActionsToItem);
+    //    ui->pushButton_SelectDir->setIconSize(QSize(25,25));
+    //    ui->pushButton_SelectDir->setStyleSheet("border-width: 0px;");
     connect(ui->pushButton_Statistics, &QPushButton::clicked, this, &LogAnalysis::updateTreeWidget);
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
             {
@@ -26,12 +27,14 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
                 {
                     ui->treeWidget_SearchResult->expandAll();
                     ui->pushButton_ExpandAll->setText("折叠");
+                    ui->pushButton_ExpandAll->setIcon(QIcon(":/ico/Collapse.ico"));
                     isExpandAll = true;
                 }
                 else
                 {
                     ui->treeWidget_SearchResult->collapseAll();
                     ui->pushButton_ExpandAll->setText("展开");
+                    ui->pushButton_ExpandAll->setIcon(QIcon(":/ico/Expand.ico"));
                     isExpandAll = false;
                 } });
 
@@ -41,10 +44,13 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
         ui->treeWidget_SearchResult->headerItem()->setTextAlignment(i, Qt::AlignCenter);
     }
 
-    // 设置第一列（index为0）的宽度为自适应文本宽度
-    ui->treeWidget_SearchResult->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    // 设置每列宽度为自适应文本宽度
+    for (int i = 0; i < ui->treeWidget_SearchResult->header()->count(); ++i)
+    {
+        ui->treeWidget_SearchResult->header()->setSectionResizeMode(i, QHeaderView::ResizeToContents);
+    }
 
-    ui->lineEdit_Dir->setText("D:\\测试转发组脚本集");
+    ui->lineEdit_Dir->setText("D:\\log");
 
     //    QString file = "D:\\测试转发组脚本集\\log\\GRE\\TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml";
     //    getTestSuiteLogContent(file);
@@ -55,39 +61,58 @@ LogAnalysis::~LogAnalysis()
     delete ui;
 }
 
+#include <windows.h>
+
 void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint &pos)
 {
 
-    // 获取被点击的 QTreeWidgetItem
-    QTreeWidgetItem *item = ui->treeWidget_SearchResult->itemAt(pos);
+    //    LPCWSTR url = reinterpret_cast<LPCWSTR>(ui->treeWidget_SearchResult->itemAt(pos)->toolTip(0).utf16());
 
-    if (item != nullptr && allLogInfo.contains(item->text(0)))
+    //    // 使用 ShellExecute 函数打开文件
+    //    intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
+
+    //    if (result <= 32)
+    //    {
+    //        // 打开失败，可以根据具体错误进行处理
+    //        // 使用 GetLastError() 获取错误代码
+    //        qDebug() << ui->treeWidget_SearchResult->itemAt(pos)->toolTip(0) << "open failed!" << GetLastError();
+    //    }
+
+    //        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
+    //        QMenu *logs = menu->addMenu("切换其他时间段的log");
+    //        QAction *openTmLog = new QAction("打开对应的TestMaster log", logs);
+    //        connect(openTmLog, &QAction::triggered, this, [=]()
+    //                { onAddItemTriggered(openTmLog); });
+
+    //        for (const QString &startTime : allLogInfo[item->text(0)]["startTime"].toStringList())
+    //        {
+    //            QAction *addAction = new QAction(startTime, logs);
+
+    //            // 将 item 作为上下文数据传递给 QAction 对象
+    //            addAction->setData(QVariant::fromValue(item));
+
+    //            // 连接信号和槽函数，并将 QAction 对象作为参数传递
+    //            connect(addAction, &QAction::triggered, this, [=]()
+    //                    { onAddItemTriggered(addAction); });
+
+    //            logs->addAction(addAction);
+    //        }
+    //        menu->addAction(openTmLog);
+    //        menu->exec(ui->treeWidget_SearchResult->mapToGlobal(pos));
+}
+
+void LogAnalysis::openXML(const QString &xml)
+{
+    LPCWSTR url = reinterpret_cast<LPCWSTR>(xml.utf16());
+
+    // 使用 ShellExecute 函数打开文件
+    intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
+
+    if (result <= 32)
     {
-        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
-        QMenu *logs = menu->addMenu("切换其他时间段的log");
-        QAction *openTmLog = new QAction("打开对应的TestMaster log", logs);
-        connect(openTmLog, &QAction::triggered, this, [=]()
-                { onAddItemTriggered(openTmLog); });
-
-        for (const QString &startTime : allLogInfo[item->text(0)]["startTime"].toStringList())
-        {
-            QAction *addAction = new QAction(startTime, logs);
-
-            // 将 item 作为上下文数据传递给 QAction 对象
-            addAction->setData(QVariant::fromValue(item));
-
-            // 连接信号和槽函数，并将 QAction 对象作为参数传递
-            connect(addAction, &QAction::triggered, this, [=]()
-                    { onAddItemTriggered(addAction); });
-
-            logs->addAction(addAction);
-        }
-        menu->addAction(openTmLog);
-        menu->exec(ui->treeWidget_SearchResult->mapToGlobal(pos));
-    }
-    else
-    {
-        qDebug() << "当前右键选中的不是 allLogInfo 中存在的键!";
+        // 打开失败，可以根据具体错误进行处理
+        // 使用 GetLastError() 获取错误代码
+        qDebug() << xml << "open failed!" << GetLastError();
     }
 }
 
@@ -95,30 +120,12 @@ void LogAnalysis::onAddItemTriggered(QAction *action)
 {
 
     // 获取 QAction 对象中保存的上下文数据
-    //    QTreeWidgetItem* item = action->data().value<QTreeWidgetItem*>();
+    QTreeWidgetItem *item = action->data().value<QTreeWidgetItem *>();
 
-    qDebug() << "当前选中：" + action->text();
+    qDebug() << "当前选中：" + item->text(0);
 
     // 同时更新子控件下对应的所有文件信息
     // ...
-}
-
-QString LogAnalysis::getTestSuiteName(QStringList &fileNameList)
-{
-
-    QString str = fileNameList[0];
-    for (int i = 1; i < fileNameList.count(); ++i)
-    {
-        str = LongestCommonSubstring(str, fileNameList[i]);
-    }
-
-    // 如果以下划线结尾，就去掉最后的一个下划线
-    if (str.endsWith('_'))
-    {
-        str = str.mid(0, str.length() - 1);
-    }
-
-    return str;
 }
 
 // 获取两个字符串的最长公共连续子串（动态规划）
@@ -173,110 +180,77 @@ QString LogAnalysis::LongestCommonSubstring(QString &a, QString &b)
     return a.mid(start, max);
 }
 
-// 从指定目录中获取所有测试集的log以及TestMaster的log
-QMap<QString, QMap<QString, QVariant>> LogAnalysis::createAllLogInfoDictionary()
-{
-
-    QMap<QString, QStringList> mapDirFiles;
-
-    QDir dir(ui->lineEdit_Dir->text(), "*.xml");
-    qDebug() << "select dir:" << dir;
-    QDirIterator it(dir, QDirIterator::Subdirectories);
-
-    // 迭代遍历所有目录下的文件、以及子目录下的文件（迭代器默认只遍历文件）
-    while (it.hasNext())
-    {
-        it.next();
-        // 只能传入文件名，不能传入绝对路径或相对路径，否则可能会计算出比tst名更长的子串
-        mapDirFiles[it.fileInfo().dir().absolutePath()] << it.fileName();
-    }
-
-    if (mapDirFiles.isEmpty())
-    {
-        qDebug() << "No log file found!";
-        return allLogInfo;
-    }
-
-    QString tstName;
-    QStringList logList;
-    QStringList tmLogList;
-    QStringList startTimeList;
-
-    const QStringList &mapKeys = mapDirFiles.keys();
-    for (const QString &dir : mapKeys)
-    {
-
-        tstName = getTestSuiteName(mapDirFiles[dir]);
-        allLogInfo[tstName]["dir"] = dir;
-
-        QRegularExpression re_logName("^" + tstName + "_(\\d{14})\\.xml");
-        QRegularExpression re_TMLogName("^TestMaster_" + tstName + "_(\\d{14})\\.xml");
-
-        for (QString &file : mapDirFiles[dir])
-        {
-            if (re_TMLogName.match(file).hasMatch())
-            {
-                tmLogList << dir + "/" + file;
-                startTimeList << QDateTime::fromString(file.mid(file.lastIndexOf('_') + 1, 14), "yyyyMMddhhmmss").toString("yyyy/MM/dd hh:mm:ss");
-            }
-            else if (re_logName.match(file).hasMatch())
-            {
-                logList << dir + "/" + file;
-                startTimeList << QDateTime::fromString(file.mid(file.lastIndexOf('_') + 1, 14), "yyyyMMddhhmmss").toString("yyyy/MM/dd hh:mm:ss");
-            }
-        }
-
-        allLogInfo[tstName]["logList"] = logList;
-        allLogInfo[tstName]["tmLogList"] = tmLogList;
-        allLogInfo[tstName]["startTime"] = startTimeList;
-
-        logList.clear();
-        tmLogList.clear();
-        startTimeList.clear();
-    }
-
-    return allLogInfo;
-}
-
 // 抓取测试套的统计信息
-QMap<QString, QString> LogAnalysis::getTestSuiteLogContent(const QString &filePath)
+QStringList LogAnalysis::getTestSuiteInfo(const QString &xml)
 {
-    QMap<QString, QString> map;
-    QFile file(filePath);
+    QStringList matchList;
+    QFile file(xml);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "failed to open" << filePath;
+        qDebug() << "failed to open" << xml;
 
-        return map;
+        return matchList;
     }
-    QString xmlContent = file.readAll();
+
+    QString xmlContent;
+
+    while (!file.atEnd())
+    {
+        xmlContent.append(file.readLine() + "\n");
+    }
+
+    static QRegularExpression re_TIME("<TIME>(.*?)</TIME>");
+    static QRegularExpression re_UseTime("<CONTENT type = \"text\"><!\\[CDATA\\[.*:(\\d+\\.\\d+)\\s.*\\]\\]></CONTENT>");
     static QRegularExpression re_OK_Num("<SECTION>\\s*<TITLE>OK<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_NG_Num("<SECTION>\\s*<TITLE>NG<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_ER_Num("<SECTION>\\s*<TITLE>ER<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_InvalidHead_Num("<SECTION>\\s*<TITLE>Invalid Head<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
-    static QRegularExpression re_UseTime("<CONTENT type = \"text\"><!\\[CDATA\\[(.*?)\\]\\]></CONTENT>");
-    if (re_OK_Num.match(xmlContent).hasMatch())
-    {
-        map["OK"] = re_OK_Num.match(xmlContent).captured(1);
-    }
-    if (re_NG_Num.match(xmlContent).hasMatch())
-    {
-        map["NG"] = re_NG_Num.match(xmlContent).captured(1);
-    }
-    if (re_ER_Num.match(xmlContent).hasMatch())
-    {
-        map["ER"] = re_ER_Num.match(xmlContent).captured(1);
-    }
-    if (re_InvalidHead_Num.match(xmlContent).hasMatch())
-    {
-        map["Invalid Head"] = re_InvalidHead_Num.match(xmlContent).captured(1);
-    }
+
     if (re_UseTime.match(xmlContent).hasMatch())
     {
-        map["Use Time"] = re_UseTime.match(xmlContent).captured(1);
+        matchList << re_UseTime.match(xmlContent).captured(1) + "h";
+        matchList << (re_OK_Num.match(xmlContent).hasMatch() ? re_OK_Num.match(xmlContent).captured(1) : "");
+        matchList << (re_NG_Num.match(xmlContent).hasMatch() ? re_NG_Num.match(xmlContent).captured(1) : "");
+        matchList << (re_ER_Num.match(xmlContent).hasMatch() ? re_ER_Num.match(xmlContent).captured(1) : "");
+        matchList << (re_InvalidHead_Num.match(xmlContent).hasMatch() ? re_InvalidHead_Num.match(xmlContent).captured(1) : "");
     }
-    qDebug() << map;
-    return map;
+    else
+    {
+        QStringList timeList;
+        QRegularExpressionMatchIterator matchAllTime = re_TIME.globalMatch(xmlContent);
+        while (matchAllTime.hasNext())
+        {
+            timeList << matchAllTime.next().captured(1);
+        }
+
+        if (!timeList.isEmpty())
+        {
+            qDebug() << "*******************************************************************";
+            qDebug() << "old time:" << timeList.first();
+            qDebug() << "new time:" << timeList.last();
+
+            QDateTime oldDateTime = QDateTime::fromString(timeList.first(), "yyyy-MM-dd hh:mm:ss");
+            QDateTime newDateTime = QDateTime::fromString(timeList.last(), "yyyy-MM-dd hh:mm:ss");
+
+            qint64 oldTimestamp = oldDateTime.toMSecsSinceEpoch();
+            qint64 newTimestamp = newDateTime.toMSecsSinceEpoch();
+            qDebug() << "oldTimestamp:" << oldTimestamp;
+            qDebug() << "newTimestamp:" << newTimestamp;
+
+            qint64 diffMilliseconds = newTimestamp - oldTimestamp;
+            qint64 hours = diffMilliseconds / (1000 * 60 * 60); // 将毫秒转换为小时
+
+            qDebug() << "Count output time:" << hours;
+
+            matchList << QString::number(hours) + "h used NotCompleted";
+        }
+        else
+        {
+            matchList << "Not started";
+        }
+    }
+
+    return matchList;
 }
 
 // 抓取测试脚本的细节信息
@@ -305,12 +279,13 @@ QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
     return map;
 }
 
-QStringList LogAnalysis::getAllTclScriptsFromLog(const QString &logFilePath)
+// 从log文件中获取所有tcl脚本信息
+QStringList LogAnalysis::getAllTclFromTestSuite(const QString &xmlPath)
 {
     QStringList tclScripts;
     static QRegularExpression re_ExecuteTclFile("<a href=.*>(.*?)</a>");
-    // 打开日志文件并逐行读取
-    QFile file(logFilePath);
+    // 打开xml文件并逐行读取记录的 tcl文件路径
+    QFile file(xmlPath);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
@@ -326,91 +301,161 @@ QStringList LogAnalysis::getAllTclScriptsFromLog(const QString &logFilePath)
     }
     else
     {
-        qDebug() << logFilePath << "does not exist or cannot be opened";
+        qDebug() << xmlPath << "does not exist or cannot be opened";
     }
     return tclScripts;
 }
 
+// 获取一个目录下的所有测试集的log文件，文件名最短的xml文件，即为TestSuite的log文件
+QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
+{
+    QStringList xmlNameList = QDir(dir).entryList(QStringList() << "*.xml", QDir::Files);
+    if (xmlNameList.isEmpty())
+    {
+        qDebug() << dir << "does not have an xml file";
+        return QStringList();
+    }
+
+    QList<int> nameLenList;
+
+    for (const QString &xml : xmlNameList)
+    {
+        nameLenList << xml.length();
+    }
+
+    std::sort(nameLenList.begin(), nameLenList.end());
+    short int maxLen = nameLenList[0];
+    QStringList testSuite;
+
+    for (const QString &xml : xmlNameList)
+    {
+        if (xml.length() == maxLen)
+        {
+            testSuite << QDir(dir).filePath(xml);
+        }
+    }
+
+    return testSuite;
+}
+
+void LogAnalysis::onTriggered(const QPoint &pos)
+{
+}
+#include <QMenuBar>
 void LogAnalysis::updateTreeWidget()
 {
-    qDebug() << "here0";
-
     ui->treeWidget_SearchResult->clear();
-    createAllLogInfoDictionary();
-    qDebug() << "here0.1";
 
-    const QStringList &allLogInfoKeys = allLogInfo.keys();
-    qDebug() << "here1";
+    QDir dir(ui->lineEdit_Dir->text());
+    dir.setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
+    QDirIterator it(dir, QDirIterator::Subdirectories);
+    QMap<QString, QMap<QString, QVariant>> map;
 
-    // 排序，以 startTime 为基准从日期的新到旧进行排序
-    for (const QString &tst : allLogInfoKeys)
+    QStringList allTestSuite;
+
+    int totalFileNum = 0;
+    // 迭代遍历所有目录
+    while (it.hasNext())
     {
-        QStringList dirList;
-        QStringList sortTimeList;
-        QStringList logList;
-        QStringList tmLogList;
+        allTestSuite = getAllTestSuiteXML(it.next());
 
-        QMap<QString, QVariant> &logData = allLogInfo[tst];
-        // 先对当前这个 tst 里面的所有 startTime 进行排序
-        sortTimeList = allLogInfo[tst]["startTime"].toStringList();
-        std::sort(sortTimeList.begin(), sortTimeList.end(), [](const QString &t1, const QString &t2)
-                  { return t1 > t2; });
+        // 给所有xml文件按照时间排序
+        std::sort(allTestSuite.begin(), allTestSuite.end(), [](const QString &a, const QString &b)
+                  { return a.mid(a.lastIndexOf("_") + 1, 14) > b.mid(a.lastIndexOf("_") + 1, 14); });
 
-        logData["startTime"] = sortTimeList;
-        for (const QString &newTime : sortTimeList)
+        if (!allTestSuite.isEmpty())
         {
-            int index = allLogInfo[tst]["startTime"].toStringList().indexOf(newTime);
+            QString xmlPath = allTestSuite[0];
+            QFileInfo file(xmlPath);
+            QString fileName = file.fileName().left(file.fileName().lastIndexOf("_"));
+            QStringList tclFileList;
 
-            // 确保数组不会越界导致程序崩溃
-            if (index >= 0 && index < allLogInfo[tst]["dir"].toStringList().length())
+            map[fileName]["path"] = xmlPath;
+            map[fileName]["infoList"] = getTestSuiteInfo(xmlPath);
+
+            for (const QString &tclFile : getAllTclFromTestSuite(xmlPath))
             {
-                dirList.append(allLogInfo[tst]["dir"].toStringList()[index]);
+                ++totalFileNum;
+                tclFileList << tclFile;
             }
-            if (index >= 0 && index < allLogInfo[tst]["logList"].toStringList().length())
+            map[fileName]["tclList"] = tclFileList;
+        }
+    }
+
+    // 创建一个进度条
+    QProgressDialog progressDialog("查找文件...", "Cancel", 0, totalFileNum, this);
+    progressDialog.setWindowModality(Qt::WindowModal);
+    progressDialog.setAutoClose(true);
+    progressDialog.setAutoReset(true);
+    progressDialog.autoReset();
+    progressDialog.setMinimumDuration(0);
+    progressDialog.setStyleSheet("QProgressBar {"
+                                 "    border-radius: 7px;"
+                                 "    border: 3px solid  #4CE637;"
+                                 "    height: 20px;"
+                                 "    border-radius: 13px;"
+                                 "    text-align: center;"
+                                 "}"
+                                 "QProgressBar::chunk {"
+                                 "    background-color: #FAE63C;"
+                                 "    margin: 6px;" // 向内缩小涂色部分
+                                 "}");
+    totalFileNum = 0;
+    QStringList xmls = map.keys();
+
+
+    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, [&](const QPoint &pos)
             {
-                logList.append(allLogInfo[tst]["logList"].toStringList()[index]);
-            }
-            if (index >= 0 && index < allLogInfo[tst]["tmLogList"].toStringList().length())
-            {
-                tmLogList.append(allLogInfo[tst]["tmLogList"].toStringList()[index]);
-            }
+                QTreeWidgetItem *item = ui->treeWidget_SearchResult->itemAt(pos);
+                qDebug() << item;
+                qDebug() << item->data(0,Qt::UserRole);
+                if (item)
+                {
+                    QMenu *menu1 = new QMenu("JOJO", ui->treeWidget_SearchResult);
+                    QMenu *menu2 = new QMenu("DIO", menu1);
+                    QAction *actionGIOGIO = new QAction("GIOGIO", menu2);
+                    connect(actionGIOGIO, &QAction::triggered, this, []()
+                            { qDebug() << "GIOGIO"; });
+                    menu2->addAction(actionGIOGIO);
+                    menu1->addMenu(menu2);
+                    menu1->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
+                    delete menu1;
+                }
+            });
+
+    for (const QString &xml : xmls)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
+        QString absPath = map[xml]["path"].toString();
+
+        item->setText(0, xml);
+        item->setIcon(0, QIcon(":/ico/tst.ico"));
+        item->setToolTip(0, "右键可打开\n" + absPath);
+
+        // 将右键菜单关联到树形控件的每个项
+        ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
+
+        int i = 1;
+        for (const QString &info : map[xml]["infoList"].toStringList())
+        {
+            item->setText(i, info);
+            item->setTextAlignment(i, Qt::AlignCenter);
+            ++i;
         }
 
-        allLogInfo[tst]["dir"] = dirList;
-        allLogInfo[tst]["logList"] = logList;
-        allLogInfo[tst]["tmLogList"] = tmLogList;
+        qDebug() << "# ///////////////////////////////////////////////////////////////////// #";
+        qDebug() << "into " << absPath;
 
-        dirList.clear();
-        logList.clear();
-        tmLogList.clear();
-    }
-    //    return;
-    qDebug() << "here2";
-    // 将遍历信息更新到控件上
-    for (const QString &tst : allLogInfoKeys)
-    {
-        curTime = QDateTime::currentDateTime().toString(Qt::ISODate) + ":";
-
-        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        item->setText(0, tst);
-        item->setIcon(0, QIcon(":/ico/tst.ico"));
-
-        qDebug() << curTime << "========================================";
-        qDebug() << curTime << "tstName:        " << tst;
-        qDebug() << curTime << "dir:            " << allLogInfo[tst]["dir"].toString();
-        qDebug() << curTime << "startTime:      " << allLogInfo[tst]["startTime"].toStringList();
-        qDebug() << curTime << "logList:        " << allLogInfo[tst]["logList"].toStringList();
-        qDebug() << curTime << "tmLogList:      " << allLogInfo[tst]["tmLogList"].toStringList();
-
-        for (const QString &logFile : allLogInfo[tst]["logList"].toStringList())
+        // 添加子item
+        for (const QString &tcl : map[xml]["tclList"].toStringList())
         {
-            QStringList allTclScripts = getAllTclScriptsFromLog(logFile);
-            for (const QString &tclFile : allTclScripts)
-            {
-                QTreeWidgetItem *tcl = new QTreeWidgetItem(item);
-                tcl->setText(0, tclFile);
-                tcl->setIcon(0, QIcon(":/ico/file_tcl.ico"));
-            }
+            QTreeWidgetItem *tclItem = new QTreeWidgetItem(item);
+            ++totalFileNum;
+            tclItem->setText(0, tcl);
+            tclItem->setIcon(0, QIcon(":/ico/file_tcl.ico"));
+            progressDialog.setValue(totalFileNum);
+            progressDialog.setLabelText("填充:" + tcl);
+            qDebug() << "add " << tcl;
         }
     }
 }
