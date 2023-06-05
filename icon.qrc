@@ -12,5 +12,6 @@
         <file>debug.ico</file>
         <file>Expand.ico</file>
         <file>Collapse.ico</file>
+        <file>select.ico</file>
     </qresource>
 </RCC>

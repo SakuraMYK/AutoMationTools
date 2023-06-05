@@ -50,6 +50,11 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
         ui->treeWidget_SearchResult->header()->setSectionResizeMode(i, QHeaderView::ResizeToContents);
     }
 
+    // 绑定树控件的右键为自定义函数
+    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this,&LogAnalysis::onTriggered);
+    // 将右键菜单关联到树形控件的每个项
+    ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
+
     ui->lineEdit_Dir->setText("D:\\log");
 
     //    QString file = "D:\\测试转发组脚本集\\log\\GRE\\TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml";
@@ -262,8 +267,16 @@ QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
         qDebug() << "failed to open" << filePath;
+        return QMap<QString, QString>{};
     }
-    QString xmlContent = file.readAll();
+    QString xmlContent;
+    QTextStream in(&file);
+    while (!in.atEnd())
+    {
+        xmlContent.append(in.readLine()+"\n");
+    }
+    file.close();
+
     static QRegularExpression re_isTestCaseEnd("<CONTENT type = \"text\"><!\\[CDATA\\[TestCase End\\]\\]></CONTENT>");
 
     if (re_isTestCaseEnd.match(xmlContent).hasMatch())
@@ -279,7 +292,7 @@ QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
     return map;
 }
 
-// 从log文件中获取所有tcl脚本信息
+// 从log文件中获取所有tcl脚本信息（包括setup、clear脚本）
 QStringList LogAnalysis::getAllTclFromTestSuite(const QString &xmlPath)
 {
     QStringList tclScripts;
@@ -306,7 +319,7 @@ QStringList LogAnalysis::getAllTclFromTestSuite(const QString &xmlPath)
     return tclScripts;
 }
 
-// 获取一个目录下的所有测试集的log文件，文件名最短的xml文件，即为TestSuite的log文件
+// 获取一个目录下的所有测试集的log文件（逻辑：文件名最短的xml文件，即为TestSuite的log文件）
 QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
 {
     QStringList xmlNameList = QDir(dir).entryList(QStringList() << "*.xml", QDir::Files);
@@ -338,10 +351,40 @@ QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
     return testSuite;
 }
 
+// 当发生控件右键点击时，执行该函数
 void LogAnalysis::onTriggered(const QPoint &pos)
 {
+    QTreeWidgetItem *item = ui->treeWidget_SearchResult->itemAt(pos);
+    if (item)
+    {
+        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
+        QMenu *otherLogs = new QMenu("其他时间log", menu);
+        bool first = true;
+
+        for (QString &data : item->data(0,Qt::UserRole).toStringList()) {
+            QFileInfo file(data);
+            short int lastIdx = file.fileName().lastIndexOf("_");
+            QString fileNameTimeString = file.fileName().mid(lastIdx +1,14);
+            QString timeString = QDateTime::fromString(fileNameTimeString, "yyyyMMddhhmmss").toString("yyyy-MM-dd hh:mm:ss");
+
+            QAction *switchLog = new QAction(timeString, otherLogs);
+            if(first)
+            {
+                switchLog->setIcon(QIcon(":/ico/select.ico"));
+                first = false;
+            }
+            connect(switchLog, &QAction::triggered, this, [timeString](){qDebug() <<"select:" <<timeString;});
+            otherLogs->addAction(switchLog);
+
+        }
+        menu->addMenu(otherLogs);
+
+        menu->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
+        delete menu;
+    }
+
 }
-#include <QMenuBar>
+
 void LogAnalysis::updateTreeWidget()
 {
     ui->treeWidget_SearchResult->clear();
@@ -371,6 +414,7 @@ void LogAnalysis::updateTreeWidget()
             QStringList tclFileList;
 
             map[fileName]["path"] = xmlPath;
+            map[fileName]["timeSortList"] = allTestSuite;
             map[fileName]["infoList"] = getTestSuiteInfo(xmlPath);
 
             for (const QString &tclFile : getAllTclFromTestSuite(xmlPath))
@@ -403,25 +447,12 @@ void LogAnalysis::updateTreeWidget()
     totalFileNum = 0;
     QStringList xmls = map.keys();
 
-
-    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, [&](const QPoint &pos)
-            {
-                QTreeWidgetItem *item = ui->treeWidget_SearchResult->itemAt(pos);
-                qDebug() << item;
-                qDebug() << item->data(0,Qt::UserRole);
-                if (item)
-                {
-                    QMenu *menu1 = new QMenu("JOJO", ui->treeWidget_SearchResult);
-                    QMenu *menu2 = new QMenu("DIO", menu1);
-                    QAction *actionGIOGIO = new QAction("GIOGIO", menu2);
-                    connect(actionGIOGIO, &QAction::triggered, this, []()
-                            { qDebug() << "GIOGIO"; });
-                    menu2->addAction(actionGIOGIO);
-                    menu1->addMenu(menu2);
-                    menu1->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
-                    delete menu1;
-                }
-            });
+    int totalScriptNum=0;
+    int totalNG=0;
+    int totalER=0;
+    int totalOK=0;
+    int totalIllegalHead=0;
+    int totalUseTime=0;
 
     for (const QString &xml : xmls)
     {
@@ -432,8 +463,8 @@ void LogAnalysis::updateTreeWidget()
         item->setIcon(0, QIcon(":/ico/tst.ico"));
         item->setToolTip(0, "右键可打开\n" + absPath);
 
-        // 将右键菜单关联到树形控件的每个项
-        ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
+        //将排好序的文件后缀时间都加入到控件 data 里，后续取用
+        item->setData(0,Qt::UserRole,map[xml]["timeSortList"]);
 
         int i = 1;
         for (const QString &info : map[xml]["infoList"].toStringList())
@@ -454,7 +485,7 @@ void LogAnalysis::updateTreeWidget()
             tclItem->setText(0, tcl);
             tclItem->setIcon(0, QIcon(":/ico/file_tcl.ico"));
             progressDialog.setValue(totalFileNum);
-            progressDialog.setLabelText("填充:" + tcl);
+            progressDialog.setLabelText("创建：" + tcl);
             qDebug() << "add " << tcl;
         }
     }
