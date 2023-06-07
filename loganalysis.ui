@@ -127,7 +127,7 @@
          </column>
          <column>
           <property name="text">
-           <string>非法头</string>
+           <string>InvalidHead</string>
           </property>
          </column>
          <column>
@@ -143,6 +143,11 @@
          <column>
           <property name="text">
            <string>core文件</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string/>
           </property>
          </column>
         </widget>

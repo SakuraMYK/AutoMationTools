@@ -51,7 +51,7 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
     }
 
     // 绑定树控件的右键为自定义函数
-    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this,&LogAnalysis::onTriggered);
+    connect(ui->treeWidget_SearchResult, &QTreeWidget::customContextMenuRequested, this, &LogAnalysis::onTriggered);
     // 将右键菜单关联到树形控件的每个项
     ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -65,8 +65,6 @@ LogAnalysis::~LogAnalysis()
 {
     delete ui;
 }
-
-#include <windows.h>
 
 void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint &pos)
 {
@@ -186,15 +184,15 @@ QString LogAnalysis::LongestCommonSubstring(QString &a, QString &b)
 }
 
 // 抓取测试套的统计信息
-QStringList LogAnalysis::getTestSuiteInfo(const QString &xml)
+QMap<QString, QString> LogAnalysis::getTestSuiteInfo(const QString &xml)
 {
-    QStringList matchList;
+    QMap<QString, QString> map;
     QFile file(xml);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
         qDebug() << "failed to open" << xml;
 
-        return matchList;
+        return map;
     }
 
     QString xmlContent;
@@ -204,7 +202,7 @@ QStringList LogAnalysis::getTestSuiteInfo(const QString &xml)
         xmlContent.append(file.readLine() + "\n");
     }
 
-    static QRegularExpression re_TIME("<TIME>(.*?)</TIME>");
+    static QRegularExpression re_StartTIME("<TIME>(.*?)</TIME>");
     static QRegularExpression re_UseTime("<CONTENT type = \"text\"><!\\[CDATA\\[.*:(\\d+\\.\\d+)\\s.*\\]\\]></CONTENT>");
     static QRegularExpression re_OK_Num("<SECTION>\\s*<TITLE>OK<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_NG_Num("<SECTION>\\s*<TITLE>NG<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
@@ -213,49 +211,52 @@ QStringList LogAnalysis::getTestSuiteInfo(const QString &xml)
 
     if (re_UseTime.match(xmlContent).hasMatch())
     {
-        matchList << re_UseTime.match(xmlContent).captured(1) + "h";
-        matchList << (re_OK_Num.match(xmlContent).hasMatch() ? re_OK_Num.match(xmlContent).captured(1) : "");
-        matchList << (re_NG_Num.match(xmlContent).hasMatch() ? re_NG_Num.match(xmlContent).captured(1) : "");
-        matchList << (re_ER_Num.match(xmlContent).hasMatch() ? re_ER_Num.match(xmlContent).captured(1) : "");
-        matchList << (re_InvalidHead_Num.match(xmlContent).hasMatch() ? re_InvalidHead_Num.match(xmlContent).captured(1) : "");
+        map["UseTime"] = re_UseTime.match(xmlContent).captured(1) + "h";
     }
     else
     {
-        QStringList timeList;
-        QRegularExpressionMatchIterator matchAllTime = re_TIME.globalMatch(xmlContent);
-        while (matchAllTime.hasNext())
-        {
-            timeList << matchAllTime.next().captured(1);
-        }
+        map["UseTime"] = "unfinished";
 
-        if (!timeList.isEmpty())
-        {
-            qDebug() << "*******************************************************************";
-            qDebug() << "old time:" << timeList.first();
-            qDebug() << "new time:" << timeList.last();
+        //        QStringList timeList;
+        //        QRegularExpressionMatchIterator matchAllTime = re_TIME.globalMatch(xmlContent);
+        //        while (matchAllTime.hasNext())
+        //        {
+        //            timeList << matchAllTime.next().captured(1);
+        //        }
 
-            QDateTime oldDateTime = QDateTime::fromString(timeList.first(), "yyyy-MM-dd hh:mm:ss");
-            QDateTime newDateTime = QDateTime::fromString(timeList.last(), "yyyy-MM-dd hh:mm:ss");
+        //        if (!timeList.isEmpty())
+        //        {
+        //            qDebug() << "*******************************************************************";
+        //            qDebug() << "old time:" << timeList.first();
+        //            qDebug() << "new time:" << timeList.last();
 
-            qint64 oldTimestamp = oldDateTime.toMSecsSinceEpoch();
-            qint64 newTimestamp = newDateTime.toMSecsSinceEpoch();
-            qDebug() << "oldTimestamp:" << oldTimestamp;
-            qDebug() << "newTimestamp:" << newTimestamp;
+        //            QDateTime oldDateTime = QDateTime::fromString(timeList.first(), "yyyy-MM-dd hh:mm:ss");
+        //            QDateTime newDateTime = QDateTime::fromString(timeList.last(), "yyyy-MM-dd hh:mm:ss");
 
-            qint64 diffMilliseconds = newTimestamp - oldTimestamp;
-            qint64 hours = diffMilliseconds / (1000 * 60 * 60); // 将毫秒转换为小时
+        //            qint64 oldTimestamp = oldDateTime.toMSecsSinceEpoch();
+        //            qint64 newTimestamp = newDateTime.toMSecsSinceEpoch();
+        //            qDebug() << "oldTimestamp:" << oldTimestamp;
+        //            qDebug() << "newTimestamp:" << newTimestamp;
 
-            qDebug() << "Count output time:" << hours;
+        //            qint64 diffMilliseconds = newTimestamp - oldTimestamp;
+        //            qint64 hours = diffMilliseconds / (1000 * 60 * 60); // 将毫秒转换为小时
 
-            matchList << QString::number(hours) + "h used NotCompleted";
-        }
-        else
-        {
-            matchList << "Not started";
-        }
+        //            qDebug() << "Count output time:" << hours;
+
+        //            matchList << QString::number(hours) + "h used NotCompleted";
+        //        }
+        //        else
+        //        {
+        //            matchList << "Not started";
+        //        }
     }
+    map["StartTime"] = (re_StartTIME.match(xmlContent).hasMatch() ? re_StartTIME.match(xmlContent).captured(1) : "");
+    map["OK"] = (re_OK_Num.match(xmlContent).hasMatch() ? re_OK_Num.match(xmlContent).captured(1) : "");
+    map["NG"] = (re_NG_Num.match(xmlContent).hasMatch() ? re_NG_Num.match(xmlContent).captured(1) : "");
+    map["ER"] = (re_ER_Num.match(xmlContent).hasMatch() ? re_ER_Num.match(xmlContent).captured(1) : "");
+    map["InvalidHead"] = (re_InvalidHead_Num.match(xmlContent).hasMatch() ? re_InvalidHead_Num.match(xmlContent).captured(1) : "");
 
-    return matchList;
+    return map;
 }
 
 // 抓取测试脚本的细节信息
@@ -273,7 +274,7 @@ QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
     QTextStream in(&file);
     while (!in.atEnd())
     {
-        xmlContent.append(in.readLine()+"\n");
+        xmlContent.append(in.readLine() + "\n");
     }
     file.close();
 
@@ -361,28 +362,28 @@ void LogAnalysis::onTriggered(const QPoint &pos)
         QMenu *otherLogs = new QMenu("其他时间log", menu);
         bool first = true;
 
-        for (QString &data : item->data(0,Qt::UserRole).toStringList()) {
+        for (QString &data : item->data(0, Qt::UserRole).toStringList())
+        {
             QFileInfo file(data);
             short int lastIdx = file.fileName().lastIndexOf("_");
-            QString fileNameTimeString = file.fileName().mid(lastIdx +1,14);
+            QString fileNameTimeString = file.fileName().mid(lastIdx + 1, 14);
             QString timeString = QDateTime::fromString(fileNameTimeString, "yyyyMMddhhmmss").toString("yyyy-MM-dd hh:mm:ss");
 
             QAction *switchLog = new QAction(timeString, otherLogs);
-            if(first)
+            if (first)
             {
                 switchLog->setIcon(QIcon(":/ico/select.ico"));
                 first = false;
             }
-            connect(switchLog, &QAction::triggered, this, [timeString](){qDebug() <<"select:" <<timeString;});
+            connect(switchLog, &QAction::triggered, this, [timeString]()
+                    { qDebug() << "select:" << timeString; });
             otherLogs->addAction(switchLog);
-
         }
         menu->addMenu(otherLogs);
 
         menu->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
         delete menu;
     }
-
 }
 
 void LogAnalysis::updateTreeWidget()
@@ -415,7 +416,6 @@ void LogAnalysis::updateTreeWidget()
 
             map[fileName]["path"] = xmlPath;
             map[fileName]["timeSortList"] = allTestSuite;
-            map[fileName]["infoList"] = getTestSuiteInfo(xmlPath);
 
             for (const QString &tclFile : getAllTclFromTestSuite(xmlPath))
             {
@@ -447,35 +447,88 @@ void LogAnalysis::updateTreeWidget()
     totalFileNum = 0;
     QStringList xmls = map.keys();
 
-    int totalScriptNum=0;
-    int totalNG=0;
-    int totalER=0;
-    int totalOK=0;
-    int totalIllegalHead=0;
-    int totalUseTime=0;
+    int total_ScriptNum = 0;
+    int total_UseTime = 0;
+    int total_OK = 0;
+    int total_NG = 0;
+    int total_ER = 0;
+    int total_IllegalHead = 0;
+    short int len_itemColumn = 9;
+
+    enum column
+    {
+        TestSuiteName,
+        StartTime,
+        UseTime,
+        OK,
+        NG,
+        ER,
+        InvalidHead,
+        TotalNum,
+        PassRate,
+        CoreFile,
+    };
 
     for (const QString &xml : xmls)
     {
         QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        QString absPath = map[xml]["path"].toString();
+        QString xmlPath = map[xml]["path"].toString();
 
         item->setText(0, xml);
         item->setIcon(0, QIcon(":/ico/tst.ico"));
-        item->setToolTip(0, "右键可打开\n" + absPath);
+        item->setToolTip(0,  xmlPath);
+        item->setData(0, Qt::UserRole, map[xml]["timeSortList"]);
 
-        //将排好序的文件后缀时间都加入到控件 data 里，后续取用
-        item->setData(0,Qt::UserRole,map[xml]["timeSortList"]);
+        QMap<QString, QString> testSuiteInfo = getTestSuiteInfo(xmlPath);
 
-        int i = 1;
-        for (const QString &info : map[xml]["infoList"].toStringList())
+        int num_OK = testSuiteInfo["OK"].toInt();
+        int num_NG = testSuiteInfo["NG"].toInt();
+        int num_ER = testSuiteInfo["ER"].toInt();
+        int num_InvalidHead = testSuiteInfo["InvalidHead"].toInt();
+        int totalNum = num_OK + num_NG + num_ER + num_InvalidHead;
+
+        item->setText(column::StartTime, testSuiteInfo["StartTime"]);
+        item->setText(column::UseTime, testSuiteInfo["UseTime"]);
+        item->setText(column::OK, testSuiteInfo["OK"]);
+        item->setText(column::NG, testSuiteInfo["NG"]);
+        item->setText(column::ER, testSuiteInfo["ER"]);
+        item->setText(column::InvalidHead, testSuiteInfo["InvalidHead"]);
+        item->setText(column::TotalNum, QString::number(totalNum));
+        if (totalNum == 0)
         {
-            item->setText(i, info);
-            item->setTextAlignment(i, Qt::AlignCenter);
-            ++i;
+            item->setText(column::PassRate, "");
+        }
+        else
+        {
+            item->setText(column::PassRate, QString::number((float)num_OK / totalNum,'f',2) + "%");
         }
 
+
+        if(totalNum == num_OK)
+        {
+            for (int i = 0; i <= len_itemColumn; ++i)
+            {
+                item->setBackground(i, QBrush(QColor(209, 248, 211)));
+            }
+        } else {
+            for (int i = 0; i <= len_itemColumn; ++i)
+            {
+                item->setBackground(i, QBrush(QColor(253, 187, 187)));
+            }
+        }
+        for (int i = 1; i <= len_itemColumn; ++i)
+        {
+            item->setTextAlignment(i, Qt::AlignCenter);
+        }
+
+        // 变量追加
+        total_OK += num_OK;
+        total_NG += num_NG;
+        total_ER += num_ER;
+        total_IllegalHead += num_InvalidHead;
+
         qDebug() << "# ///////////////////////////////////////////////////////////////////// #";
-        qDebug() << "into " << absPath;
+        qDebug() << "into " << xmlPath;
 
         // 添加子item
         for (const QString &tcl : map[xml]["tclList"].toStringList())
@@ -489,4 +542,28 @@ void LogAnalysis::updateTreeWidget()
             qDebug() << "add " << tcl;
         }
     }
+
+    QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
+    int totalNum = total_OK + total_NG + total_ER + total_IllegalHead;
+
+    item->setText(column::TestSuiteName, "总数");
+    item->setText(column::OK, QString::number(total_OK));
+    item->setText(column::NG, QString::number(total_NG));
+    item->setText(column::ER, QString::number(total_ER));
+    item->setText(column::InvalidHead, QString::number(total_IllegalHead));
+
+    if (totalNum == 0)
+    {
+        item->setText(column::TotalNum, "");
+        item->setText(column::PassRate, "");
+    }
+    else
+    {
+        item->setText(column::TotalNum, QString::number(totalNum));
+        item->setText(column::PassRate, QString::number((float)total_OK / totalNum,'f',2) + "%");
+    }
+
+    for (int i = 0; i <= len_itemColumn; ++i){item->setBackground(i, QBrush(QColor(175, 216, 241)));}
+    for (int i = 1; i <= len_itemColumn; ++i){item->setTextAlignment(i, Qt::AlignCenter);}
+
 }

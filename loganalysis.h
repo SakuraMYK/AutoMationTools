@@ -8,7 +8,7 @@
 #include <QDirIterator>
 #include <QTextEdit>
 #include <QProgressDialog>
-
+#include <windows.h>
 namespace Ui
 {
     class LogAnalysis;
@@ -25,7 +25,7 @@ public:
     void onAddItemTriggered(QAction *action);
     QString LongestCommonSubstring(QString &a, QString &b);
     void updateTreeWidget();
-    QStringList getTestSuiteInfo(const QString&filePath);
+    QMap<QString,QString> getTestSuiteInfo(const QString&filePath);
     QMap<QString,QString> getScriptLogContent(const QString&filePath);
     QStringList getAllTclFromTestSuite(const QString &xmlPath);
     QStringList getAllTestSuiteXML(const QString &dir);
