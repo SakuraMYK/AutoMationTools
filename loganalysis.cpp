@@ -183,8 +183,8 @@ QString LogAnalysis::LongestCommonSubstring(QString &a, QString &b)
     return a.mid(start, max);
 }
 
-// 抓取测试套的统计信息
-QMap<QString, QString> LogAnalysis::getTestSuiteInfo(const QString &xml)
+// 抓取测试套的log信息
+QMap<QString, QString> LogAnalysis::getTestSuiteLogInfo(const QString &xml)
 {
     QMap<QString, QString> map;
     QFile file(xml);
@@ -208,10 +208,11 @@ QMap<QString, QString> LogAnalysis::getTestSuiteInfo(const QString &xml)
     static QRegularExpression re_NG_Num("<SECTION>\\s*<TITLE>NG<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_ER_Num("<SECTION>\\s*<TITLE>ER<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
     static QRegularExpression re_InvalidHead_Num("<SECTION>\\s*<TITLE>Invalid Head<\\/TITLE>\\s*<VALUE><!\\[CDATA\\[(\\d+)\\]\\]><\\/VALUE>\\s*<\\/SECTION>");
+    static QRegularExpression re_Completed("</ATFLOG>");
 
     if (re_UseTime.match(xmlContent).hasMatch())
     {
-        map["UseTime"] = re_UseTime.match(xmlContent).captured(1) + "h";
+        map["UseTime"] = re_UseTime.match(xmlContent).captured(1);
     }
     else
     {
@@ -255,14 +256,13 @@ QMap<QString, QString> LogAnalysis::getTestSuiteInfo(const QString &xml)
     map["NG"] = (re_NG_Num.match(xmlContent).hasMatch() ? re_NG_Num.match(xmlContent).captured(1) : "");
     map["ER"] = (re_ER_Num.match(xmlContent).hasMatch() ? re_ER_Num.match(xmlContent).captured(1) : "");
     map["InvalidHead"] = (re_InvalidHead_Num.match(xmlContent).hasMatch() ? re_InvalidHead_Num.match(xmlContent).captured(1) : "");
-
+    map["isCompleted"] = (re_Completed.match(xmlContent).hasMatch() ? "Completed" : "Incomplete");
     return map;
 }
 
-// 抓取测试脚本的细节信息
-QMap<QString, QString> LogAnalysis::getScriptLogContent(const QString &filePath)
+// 抓取测试脚本的log信息
+QMap<QString, QString> LogAnalysis::getScriptLogInfo(const QString &filePath)
 {
-
     QMap<QString, QString> map;
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -320,13 +320,13 @@ QStringList LogAnalysis::getAllTclFromTestSuite(const QString &xmlPath)
     return tclScripts;
 }
 
-// 获取一个目录下的所有测试集的log文件（逻辑：文件名最短的xml文件，即为TestSuite的log文件）
+// 返回一个目录下的所有测试集文件列表（代码逻辑：文件名最短的xml文件，即为TestSuite的log文件，默认按照时间排序）
 QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
 {
     QStringList xmlNameList = QDir(dir).entryList(QStringList() << "*.xml", QDir::Files);
     if (xmlNameList.isEmpty())
     {
-        qDebug() << dir << "does not have an xml file";
+        qDebug() << __func__ << "warning: " << "There are no xml files in"<<dir;
         return QStringList();
     }
 
@@ -348,6 +348,10 @@ QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
             testSuite << QDir(dir).filePath(xml);
         }
     }
+
+    // 给所有log文件按照时间排序
+    std::sort(testSuite.begin(), testSuite.end(), [](const QString &a, const QString &b)
+              { return a.mid(a.lastIndexOf("_") + 1, 14) > b.mid(a.lastIndexOf("_") + 1, 14); });
 
     return testSuite;
 }
@@ -392,37 +396,46 @@ void LogAnalysis::updateTreeWidget()
 
     QDir dir(ui->lineEdit_Dir->text());
     dir.setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
-    QDirIterator it(dir, QDirIterator::Subdirectories);
+    QDirIterator directory(dir, QDirIterator::Subdirectories);
     QMap<QString, QMap<QString, QVariant>> map;
-
-    QStringList allTestSuite;
 
     int totalFileNum = 0;
     // 迭代遍历所有目录
-    while (it.hasNext())
+    while (directory.hasNext())
     {
-        allTestSuite = getAllTestSuiteXML(it.next());
 
-        // 给所有xml文件按照时间排序
-        std::sort(allTestSuite.begin(), allTestSuite.end(), [](const QString &a, const QString &b)
-                  { return a.mid(a.lastIndexOf("_") + 1, 14) > b.mid(a.lastIndexOf("_") + 1, 14); });
-
-        if (!allTestSuite.isEmpty())
+        QStringList testSuiteList = getAllTestSuiteXML(directory.next());
+        if (!testSuiteList.isEmpty())
         {
-            QString xmlPath = allTestSuite[0];
-            QFileInfo file(xmlPath);
-            QString fileName = file.fileName().left(file.fileName().lastIndexOf("_"));
-            QStringList tclFileList;
+            QStringList tclScriptList;
+            QString xmlPath;
 
-            map[fileName]["path"] = xmlPath;
-            map[fileName]["timeSortList"] = allTestSuite;
+            // 遍历所有log文件，仅获取已完成的log
+            for (QString &path : testSuiteList)
+            {
+                QMap<QString, QString> logInfo = getTestSuiteLogInfo(path);
+
+                qDebug() << "path:" << path;
+                qDebug() << "logInfo:" << logInfo;
+                qDebug() << "isCompleted:" << logInfo["isCompleted"];
+                if (logInfo["isCompleted"] == "Completed")
+                {
+                    xmlPath = path;
+                    break;
+                }
+                xmlPath = path;
+            }
+            QFileInfo file(xmlPath);
+            QString testSuiteName = file.fileName().left(file.fileName().lastIndexOf("_"));
+            map[testSuiteName]["xmlPath"] = xmlPath;
+            map[testSuiteName]["allTestSuiteList"] = testSuiteList;
 
             for (const QString &tclFile : getAllTclFromTestSuite(xmlPath))
             {
                 ++totalFileNum;
-                tclFileList << tclFile;
+                tclScriptList << tclFile;
             }
-            map[fileName]["tclList"] = tclFileList;
+            map[testSuiteName]["tclScriptList"] = tclScriptList;
         }
     }
 
@@ -447,8 +460,7 @@ void LogAnalysis::updateTreeWidget()
     totalFileNum = 0;
     QStringList xmls = map.keys();
 
-    int total_ScriptNum = 0;
-    int total_UseTime = 0;
+    float total_UseTime = 0;
     int total_OK = 0;
     int total_NG = 0;
     int total_ER = 0;
@@ -468,19 +480,18 @@ void LogAnalysis::updateTreeWidget()
         PassRate,
         CoreFile,
     };
-
     for (const QString &xml : xmls)
     {
         QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        QString xmlPath = map[xml]["path"].toString();
-
+        QString xmlPath = map[xml]["xmlPath"].toString();
         item->setText(0, xml);
         item->setIcon(0, QIcon(":/ico/tst.ico"));
-        item->setToolTip(0,  xmlPath);
-        item->setData(0, Qt::UserRole, map[xml]["timeSortList"]);
+        item->setToolTip(0, xmlPath);
+        item->setData(0, Qt::UserRole, map[xml]["allTestSuiteList"]);
 
-        QMap<QString, QString> testSuiteInfo = getTestSuiteInfo(xmlPath);
+        QMap<QString, QString> testSuiteInfo = getTestSuiteLogInfo(xmlPath);
 
+        float usetime=testSuiteInfo["UseTime"].toFloat();
         int num_OK = testSuiteInfo["OK"].toInt();
         int num_NG = testSuiteInfo["NG"].toInt();
         int num_ER = testSuiteInfo["ER"].toInt();
@@ -488,7 +499,7 @@ void LogAnalysis::updateTreeWidget()
         int totalNum = num_OK + num_NG + num_ER + num_InvalidHead;
 
         item->setText(column::StartTime, testSuiteInfo["StartTime"]);
-        item->setText(column::UseTime, testSuiteInfo["UseTime"]);
+        item->setText(column::UseTime, testSuiteInfo["UseTime"] + "h");
         item->setText(column::OK, testSuiteInfo["OK"]);
         item->setText(column::NG, testSuiteInfo["NG"]);
         item->setText(column::ER, testSuiteInfo["ER"]);
@@ -500,20 +511,23 @@ void LogAnalysis::updateTreeWidget()
         }
         else
         {
-            item->setText(column::PassRate, QString::number((float)num_OK / totalNum,'f',2) + "%");
+            item->setText(column::PassRate, QString::number(((float)num_OK / totalNum)*100 , 'f',0) + "%");
         }
 
-
-        if(totalNum == num_OK)
+        if (totalNum == num_OK)
         {
+            // 全Pass的刷绿色
             for (int i = 0; i <= len_itemColumn; ++i)
             {
                 item->setBackground(i, QBrush(QColor(209, 248, 211)));
             }
-        } else {
+        }
+        else
+        {
+            // 非全 OK的均刷红
             for (int i = 0; i <= len_itemColumn; ++i)
             {
-                item->setBackground(i, QBrush(QColor(253, 187, 187)));
+                item->setBackground(i, QBrush(QColor(255, 224, 224)));
             }
         }
         for (int i = 1; i <= len_itemColumn; ++i)
@@ -522,16 +536,14 @@ void LogAnalysis::updateTreeWidget()
         }
 
         // 变量追加
+        total_UseTime += usetime;
         total_OK += num_OK;
         total_NG += num_NG;
         total_ER += num_ER;
         total_IllegalHead += num_InvalidHead;
 
-        qDebug() << "# ///////////////////////////////////////////////////////////////////// #";
-        qDebug() << "into " << xmlPath;
-
         // 添加子item
-        for (const QString &tcl : map[xml]["tclList"].toStringList())
+        for (const QString &tcl : map[xml]["tclScriptList"].toStringList())
         {
             QTreeWidgetItem *tclItem = new QTreeWidgetItem(item);
             ++totalFileNum;
@@ -539,14 +551,14 @@ void LogAnalysis::updateTreeWidget()
             tclItem->setIcon(0, QIcon(":/ico/file_tcl.ico"));
             progressDialog.setValue(totalFileNum);
             progressDialog.setLabelText("创建：" + tcl);
-            qDebug() << "add " << tcl;
         }
     }
 
     QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
     int totalNum = total_OK + total_NG + total_ER + total_IllegalHead;
 
-    item->setText(column::TestSuiteName, "总数");
+    item->setText(column::TestSuiteName, "总计");
+    item->setText(column::UseTime, QString::number(total_UseTime)+"h");
     item->setText(column::OK, QString::number(total_OK));
     item->setText(column::NG, QString::number(total_NG));
     item->setText(column::ER, QString::number(total_ER));
@@ -560,10 +572,15 @@ void LogAnalysis::updateTreeWidget()
     else
     {
         item->setText(column::TotalNum, QString::number(totalNum));
-        item->setText(column::PassRate, QString::number((float)total_OK / totalNum,'f',2) + "%");
+        item->setText(column::PassRate, QString::number(((float)total_OK / totalNum)*100 , 'f',0) + "%");
     }
 
-    for (int i = 0; i <= len_itemColumn; ++i){item->setBackground(i, QBrush(QColor(175, 216, 241)));}
-    for (int i = 1; i <= len_itemColumn; ++i){item->setTextAlignment(i, Qt::AlignCenter);}
-
+    for (int i = 0; i <= len_itemColumn; ++i)
+    {
+        item->setBackground(i, QBrush(QColor(175, 216, 241)));
+    }
+    for (int i = 1; i <= len_itemColumn; ++i)
+    {
+        item->setTextAlignment(i, Qt::AlignCenter);
+    }
 }

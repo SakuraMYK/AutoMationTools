@@ -25,8 +25,8 @@ public:
     void onAddItemTriggered(QAction *action);
     QString LongestCommonSubstring(QString &a, QString &b);
     void updateTreeWidget();
-    QMap<QString,QString> getTestSuiteInfo(const QString&filePath);
-    QMap<QString,QString> getScriptLogContent(const QString&filePath);
+    QMap<QString,QString> getTestSuiteLogInfo(const QString&filePath);
+    QMap<QString,QString> getScriptLogInfo(const QString&filePath);
     QStringList getAllTclFromTestSuite(const QString &xmlPath);
     QStringList getAllTestSuiteXML(const QString &dir);
     void openXML(const QString&xml);
