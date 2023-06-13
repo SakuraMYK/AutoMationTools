@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     ui->setupUi(this);
-    this->setWindowIcon(QIcon(":/ico/winTitle.ico"));
+    this->setWindowIcon(QIcon(":/icon/winTitle.ico"));
 
     testSuite = nullptr;
     logAnalysis = nullptr;

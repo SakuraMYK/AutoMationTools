@@ -54,9 +54,8 @@
             <string>展开</string>
            </property>
            <property name="icon">
-            <iconset theme="applications-development" resource="icon.qrc">
-             <normaloff>:/ico/Expand.ico</normaloff>
-             <normalon>:/ico/Expand.ico</normalon>:/ico/Expand.ico</iconset>
+            <iconset resource="icon.qrc">
+             <normaloff>:/icon/Expand.ico</normaloff>:/icon/Expand.ico</iconset>
            </property>
           </widget>
          </item>
@@ -112,6 +111,11 @@
          </column>
          <column>
           <property name="text">
+           <string>总数</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string> OK </string>
           </property>
          </column>
@@ -128,11 +132,6 @@
          <column>
           <property name="text">
            <string>InvalidHead</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>总数</string>
           </property>
          </column>
          <column>

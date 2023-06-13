@@ -1,17 +1,39 @@
 <RCC>
-    <qresource prefix="/ico">
-        <file>file.ico</file>
-        <file>folder.ico</file>
-        <file>folder_open.ico</file>
-        <file>tst.ico</file>
-        <file>tcl.ico</file>
-        <file>file_tcl.ico</file>
-        <file>winTitle.ico</file>
-        <file>log.ico</file>
-        <file>createTst.ico</file>
-        <file>debug.ico</file>
-        <file>Expand.ico</file>
-        <file>Collapse.ico</file>
-        <file>select.ico</file>
+    <qresource prefix="/">
+        <file>icon/Collapse.ico</file>
+        <file>icon/debug.ico</file>
+        <file>icon/Expand.ico</file>
+        <file>icon/file.ico</file>
+        <file>icon/file_tcl.ico</file>
+        <file>icon/folder.ico</file>
+        <file>icon/folder_open.ico</file>
+        <file>icon/icons8-add-file-100.png</file>
+        <file>icon/icons8-magnifying-64.png</file>
+        <file>icon/log.ico</file>
+        <file>icon/log_2.png</file>
+        <file>icon/select.ico</file>
+        <file>icon/tcl.ico</file>
+        <file>icon/winTitle.ico</file>
+        <file>icon/icons8-create-64.png</file>
+        <file>icon/icons8-view-100.png</file>
+        <file>icon/icons8-view-64.png</file>
+        <file>icon/icons8-view-100 (1).png</file>
+        <file>icon/icons8-view-64 (1).png</file>
+        <file>icon/icons8-bug-48.png</file>
+        <file>icon/icons8-bug-64.png</file>
+        <file>icon/icons8-bug-64 (1).png</file>
+        <file>icon/icons8-bug-100.png</file>
+        <file>icon/icons8-tree-64.png</file>
+        <file>icon/icons8-file-64 (1).png</file>
+        <file>icon/icons8-file-64.png</file>
+        <file>icon/icons8-tree-32.png</file>
+        <file>icon/icons8-oak-tree-48.png</file>
+        <file>icon/icons8-delete-100.png</file>
+        <file>icon/icons8-time-80.png</file>
+        <file>icon/icons8-time-100.png</file>
+        <file>icon/icons8-file-47.png</file>
+        <file>icon/icons8-open-book-100.png</file>
+        <file>icon/icons8-xml-100.png</file>
+        <file>icon/icons8-sum-60.png</file>
     </qresource>
 </RCC>

@@ -214,7 +214,7 @@ void TestSuite::initTreeWidget()
 
 void TestSuite::initPushButton()
 {
-    ui->pushButton_SelectDir->setIcon(QIcon(":/ico/folder.ico"));
+    ui->pushButton_SelectDir->setIcon(QIcon(":/icon/folder.ico"));
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
             {
         if  (historicalPath.isEmpty()){
@@ -436,8 +436,8 @@ void TestSuite::createTestSuite()
 // 文件查找与更新
 void TestSuite::SearchFiles_and_UpdateTreeWidget()
 {
-    QIcon ico_folder(":/ico/folder.ico");
-    QIcon ico_file(":/ico/file.ico");
+    QIcon ico_folder(":/ico/icon/folder.ico");
+    QIcon ico_file(":/ico/icon/file.ico");
     QMap<QString, QStringList> mapDirFiles;
     GBKFileIO io;
 

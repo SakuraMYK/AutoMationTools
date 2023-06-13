@@ -5,6 +5,7 @@
 #include <QShortcut>
 #include <QDateTime>
 
+
 namespace Ui {
 class DebugInfo;
 }
