@@ -57,8 +57,12 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
 
     ui->lineEdit_Dir->setText("D:\\log");
 
-    //    QString file = "D:\\测试转发组脚本集\\log\\GRE\\TestMaster_TS_BAS_GRE_10.1.11.41.2.13_1_1_4_20230426092744.xml";
-    //    getTestSuiteLogContent(file);
+
+    // setSectionsClickable 不开起，那么QHeaderView::sectionClicked信号将无法触发
+    ui->treeWidget_SearchResult->header()->setSectionsClickable(true);
+    connect(ui->treeWidget_SearchResult->header(), &QHeaderView::sectionClicked, this, &LogAnalysis::sortItems);
+
+
 }
 
 LogAnalysis::~LogAnalysis()
@@ -66,47 +70,17 @@ LogAnalysis::~LogAnalysis()
     delete ui;
 }
 
-void LogAnalysis::addOtherLogfileContextMenuActionsToItem(const QPoint &pos)
+// 调用IE浏览器打开xml文件
+void LogAnalysis::openXML(const QString &xmlPath)
 {
+    if (xmlPath.isEmpty())
+    {
+        qDebug() << __func__ << "warning:"
+                 << "path is Empty!";
+        return;
+    }
 
-    //    LPCWSTR url = reinterpret_cast<LPCWSTR>(ui->treeWidget_SearchResult->itemAt(pos)->toolTip(0).utf16());
-
-    //    // 使用 ShellExecute 函数打开文件
-    //    intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
-
-    //    if (result <= 32)
-    //    {
-    //        // 打开失败，可以根据具体错误进行处理
-    //        // 使用 GetLastError() 获取错误代码
-    //        qDebug() << ui->treeWidget_SearchResult->itemAt(pos)->toolTip(0) << "open failed!" << GetLastError();
-    //    }
-
-    //        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
-    //        QMenu *logs = menu->addMenu("切换其他时间段的log");
-    //        QAction *openTmLog = new QAction("打开对应的TestMaster log", logs);
-    //        connect(openTmLog, &QAction::triggered, this, [=]()
-    //                { onAddItemTriggered(openTmLog); });
-
-    //        for (const QString &startTime : allLogInfo[item->text(0)]["startTime"].toStringList())
-    //        {
-    //            QAction *addAction = new QAction(startTime, logs);
-
-    //            // 将 item 作为上下文数据传递给 QAction 对象
-    //            addAction->setData(QVariant::fromValue(item));
-
-    //            // 连接信号和槽函数，并将 QAction 对象作为参数传递
-    //            connect(addAction, &QAction::triggered, this, [=]()
-    //                    { onAddItemTriggered(addAction); });
-
-    //            logs->addAction(addAction);
-    //        }
-    //        menu->addAction(openTmLog);
-    //        menu->exec(ui->treeWidget_SearchResult->mapToGlobal(pos));
-}
-
-void LogAnalysis::openXML(const QString &xml)
-{
-    LPCWSTR url = reinterpret_cast<LPCWSTR>(xml.utf16());
+    LPCWSTR url = reinterpret_cast<LPCWSTR>(xmlPath.utf16());
 
     // 使用 ShellExecute 函数打开文件
     intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
@@ -115,60 +89,8 @@ void LogAnalysis::openXML(const QString &xml)
     {
         // 打开失败，可以根据具体错误进行处理
         // 使用 GetLastError() 获取错误代码
-        qDebug() << xml << "open failed!" << GetLastError();
+        qDebug() << __func__ << "warning:" << xmlPath << "open failed!" << GetLastError();
     }
-}
-
-// 获取两个字符串的最长公共连续子串（动态规划）
-QString LogAnalysis::LongestCommonSubstring(QString &a, QString &b)
-{
-
-    int len_a = a.length() + 1;
-    int len_b = b.length() + 1;
-
-    // 容器创建一个二维矩阵，并全部初始为0
-    std::vector<std::vector<int>> dp(len_a, std::vector<int>(len_b, 0));
-
-    int max = 0;
-    int start = 0;
-
-    // dp的下标要从1开始，以忽略首行、首列的0
-    for (int i = 1; i < len_a; ++i)
-    {
-        for (int j = 1; j < len_b; ++j)
-        {
-            // 字符串取值的下标要 -1 ，因为包含了首行、首列
-            if (a[i - 1] == b[j - 1])
-            {
-                dp[i][j] = dp[i - 1][j - 1] + 1;
-                if (dp[i - 1][j - 1] + 1 > max)
-                {
-                    max = dp[i - 1][j - 1] + 1;
-                    start = i - max;
-                }
-            }
-        }
-    }
-
-    //    // debug 打印操作
-    //    QString str;
-    //    QString str2 = "  ";
-    //    for (int i = 1; i < len_b; ++i) {
-    //        str2.append(b[i-1]).append(" ");
-    //    }
-    //    qDebug() << str2;
-    //    for (int i = 1; i < len_a; ++i) {
-    //        str.append(a[i-1]).append(" ");
-    //        for (int j = 1; j < len_b; ++j) {
-    //            str.append(QString::number(dp[i][j]).append(" "));
-    //        }
-    //        qDebug() << str;
-    //        str = "";
-    //    }
-
-    //    qDebug() <<"最长子串为：" <<a.mid(start,max);
-
-    return a.mid(start, max);
 }
 
 // 抓取测试套的log信息
@@ -178,7 +100,7 @@ QMap<QString, QString> LogAnalysis::getTestSuiteLogInfo(const QString &xml)
     QFile file(xml);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "failed to open" << xml;
+        qDebug() << __func__ << "warning: failed to open" << xml;
 
         return map;
     }
@@ -281,31 +203,65 @@ QMap<QString, QString> LogAnalysis::getScriptLogInfo(const QString &filePath)
     return map;
 }
 
-// 从log文件中获取所有tcl脚本信息（包括setup、clear脚本）
-QStringList LogAnalysis::getAllTclFromTestSuite(const QString &xmlPath)
+// 从log文件中获取所有tcl脚本的简单信息（包括setup、clear脚本）
+QMap<QString, QStringList> LogAnalysis::getAllScriptInfoFromTestSuiteLog(const QString &xmlPath)
 {
-    QStringList tclScripts;
-    static QRegularExpression re_ExecuteTclFile("<a href=.*>(.*?)</a>");
+    QMap<QString, QStringList> map;
+
     // 打开xml文件并逐行读取记录的 tcl文件路径
     QFile file(xmlPath);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
+        QString xmlContent;
         QTextStream in(&file);
         while (!in.atEnd())
         {
-            QRegularExpressionMatch re = re_ExecuteTclFile.match(in.readLine());
-            if (re.hasMatch())
-            {
-                tclScripts << re.captured(1);
-            }
+            xmlContent.append(in.readLine() + "\n");
         }
         file.close();
+
+        QStringList tclXmlNameList;
+        QStringList tclTitleList;
+        QStringList tclResultList;
+        QStringList tclBeginList;
+
+        static QRegularExpression re_ExecuteFile("<TITLE>Execute</TITLE>\\s+<VALUE><!\\[CDATA\\[<a href=\"\\./(.*?)\" target=\"_blank\">.*?</a>");
+        static QRegularExpression re_Title("<TITLE>Title</TITLE>\\s+<VALUE><!\\[CDATA\\[(.*)\\]\\]></VALUE>");
+        static QRegularExpression re_Result("<TITLE>Result</TITLE>\\s+<VALUE><!\\[CDATA\\[(\\w+)\\]\\]></VALUE>");
+        static QRegularExpression re_Begin("<TITLE>Begin</TITLE>\\s+<VALUE><!\\[CDATA\\[(.*)\\]\\]></VALUE>");
+
+        QRegularExpressionMatchIterator it_File = re_ExecuteFile.globalMatch(xmlContent);
+        QRegularExpressionMatchIterator it_Title = re_Title.globalMatch(xmlContent);
+        QRegularExpressionMatchIterator it_Result = re_Result.globalMatch(xmlContent);
+        QRegularExpressionMatchIterator it_Begin = re_Begin.globalMatch(xmlContent);
+
+        while (it_File.hasNext())
+        {
+            tclXmlNameList << it_File.next().captured(1);
+        }
+        while (it_Title.hasNext())
+        {
+            tclTitleList << it_Title.next().captured(1);
+        }
+        while (it_Result.hasNext())
+        {
+            tclResultList << it_Result.next().captured(1);
+        }
+        while (it_Begin.hasNext())
+        {
+            tclBeginList << it_Begin.next().captured(1);
+        }
+
+        map["tclXmlNameList"] = tclXmlNameList;
+        map["tclTitleList"] = tclTitleList;
+        map["tclResultList"] = tclResultList;
+        map["tclBeginList"] = tclBeginList;
     }
     else
     {
-        qDebug() << xmlPath << "does not exist or cannot be opened";
+        qDebug() << __func__ << "warning: " << xmlPath << "does not exist or cannot be opened";
     }
-    return tclScripts;
+    return map;
 }
 
 // 返回一个目录下的所有测试集文件列表（代码逻辑：文件名最短的xml文件，即为TestSuite的log文件，默认按照时间排序）
@@ -357,8 +313,7 @@ void LogAnalysis::onTriggered(const QPoint &pos)
 {
     // 获取传入pos所在位置的QTreeWidgetItem指针
     QTreeWidgetItem *item = ui->treeWidget_SearchResult->itemAt(pos);
-
-    if (item && item->data(column::ID, Qt::UserRole).toString() == "father" && item->text(0) != "总计")
+    if (item && item->data(column::ID, Qt::UserRole).toString() == "father" && !item->text(0).contains("总计"))
     {
         QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
         QMenu *menuOpen = new QMenu("打开", ui->treeWidget_SearchResult);
@@ -378,12 +333,11 @@ void LogAnalysis::onTriggered(const QPoint &pos)
                 total_ER -= item->data(column::ER,Qt::UserRole).toInt();
                 total_InvalidHead -= item->data(column::InvalidHead,Qt::UserRole).toInt();
                 delete item;
-                updateItemTotal();
-                });
+                updateItemTotal(); });
         connect(actionOpenXml, &QAction::triggered, this, [=]()
-                { showXMLInIE(item->data(column::XmlPath, Qt::UserRole).toString()); });
+                { openXML(item->data(column::XmlPath, Qt::UserRole).toString()); });
         connect(actionOpenTMXml, &QAction::triggered, this, [=]()
-                { showXMLInIE(item->data(column::TMXmlPath, Qt::UserRole).toString()); });
+                { openXML(item->data(column::TMXmlPath, Qt::UserRole).toString()); });
 
         bool first = true;
 
@@ -416,6 +370,25 @@ void LogAnalysis::onTriggered(const QPoint &pos)
     }
     else if (item && item->data(column::ID, Qt::UserRole).toString() == "son")
     {
+        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
+        QMenu *menuOpen = new QMenu("打开", ui->treeWidget_SearchResult);
+        QAction *actionOpenXml = new QAction("打开xml", menuOpen);
+        QAction *actionOpenTMXml = new QAction("打开TestMaster xml", menuOpen);
+
+        menuOpen->setIcon(QIcon(":/icon/icons8-xml-100.png"));
+
+        connect(actionOpenXml, &QAction::triggered, this, [=]()
+                {
+            qDebug() << "item->data(column::XmlPath, Qt::UserRole).toString()"<< item->data(column::XmlPath, Qt::UserRole).toString();
+        openXML(item->data(column::XmlPath, Qt::UserRole).toString()); });
+        connect(actionOpenTMXml, &QAction::triggered, this, [=]()
+                { openXML(item->data(column::TMXmlPath, Qt::UserRole).toString()); });
+        menu->addMenu(menuOpen);
+        menuOpen->addAction(actionOpenXml);
+        menuOpen->addAction(actionOpenTMXml);
+
+        menu->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
+        delete menu;
     }
 }
 
@@ -434,7 +407,6 @@ QMap<QString, QMap<QString, QVariant>> LogAnalysis::traverseDirCreateTstMap()
         QStringList testSuiteList = getAllTestSuiteXML(dirPath);
         if (!testSuiteList.isEmpty())
         {
-            QStringList tclScriptList;
             QString xmlPath;
 
             // 遍历所有log文件，仅获取已完成的log
@@ -452,25 +424,25 @@ QMap<QString, QMap<QString, QVariant>> LogAnalysis::traverseDirCreateTstMap()
             QFileInfo file(xmlPath);
             QString testSuiteName = file.fileName().left(file.fileName().lastIndexOf("_"));
             QString TMXmlPath = dirPath + "/TestMaster_" + file.fileName();
+            QMap<QString, QStringList> map_tclScript = getAllScriptInfoFromTestSuiteLog(xmlPath);
 
-            qDebug() << "TMXmlPath:" << TMXmlPath;
-
+            map[testSuiteName]["dirPath"] = dirPath;
             map[testSuiteName]["xmlPath"] = xmlPath;
             map[testSuiteName]["TMXmlPath"] = TMXmlPath;
             map[testSuiteName]["allTestSuiteList"] = testSuiteList;
 
-            for (const QString &tclFile : getAllTclFromTestSuite(xmlPath))
-            {
-                ++progressDialog_Count;
-                tclScriptList << tclFile;
-            }
-            map[testSuiteName]["tclScriptList"] = tclScriptList;
+            map[testSuiteName]["tclXmlNameList"] = map_tclScript["tclXmlNameList"];
+            map[testSuiteName]["tclTitleList"] = map_tclScript["tclTitleList"];
+            map[testSuiteName]["tclResultList"] = map_tclScript["tclResultList"];
+            map[testSuiteName]["tclBeginList"] = map_tclScript["tclBeginList"];
+
+            progressDialog_Count += map_tclScript["xmlPathList"].length();
         }
     }
     return map;
 }
 
-// 返回一个预设好的QProgressDialog进度条
+// 返回一个预设的QProgressDialog进度条
 QProgressDialog *LogAnalysis::progressDialog()
 {
     // 创建一个进度条
@@ -497,47 +469,37 @@ QProgressDialog *LogAnalysis::progressDialog()
     return p;
 }
 
-// 调用IE浏览器打开xml文件
-void LogAnalysis::showXMLInIE(const QString &xmlPath)
+
+
+
+// 更新TreeWigdet最后一行的item，即更新总计
+void LogAnalysis::updateItemTotal( )
 {
-    LPCWSTR url = reinterpret_cast<LPCWSTR>(xmlPath.utf16());
+    //获取最后一行的item指针
+    QTreeWidgetItem *itemTotal = ui->treeWidget_SearchResult->topLevelItem(ui->treeWidget_SearchResult->topLevelItemCount() - 1);
 
-    // 使用 ShellExecute 函数调用 IE浏览器打开文件
-    intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
+    itemTotal->setIcon(0, QIcon(":/icon/icons8-sum-49.png"));
 
-    if (result <= 32)
-    {
-        // 打开失败，可以根据具体错误进行处理
-        // 使用 GetLastError() 获取错误代码
-        qDebug() << xmlPath << "open failed!" << GetLastError();
-    }
-}
-
-void LogAnalysis::updateItemTotal()
-{
-    int lastItem = ui->treeWidget_SearchResult->topLevelItemCount() -1;
-    qDebug() <<"lastItem"<<lastItem;
-    QTreeWidgetItem *itemTotal = ui->treeWidget_SearchResult->topLevelItem(lastItem);
     if (itemTotal)
     {
         int totalNum = total_OK + total_NG + total_ER + total_InvalidHead;
 
-        itemTotal->setText(column::TestSuiteName, "总计");
+        itemTotal->setText(column::TestSuiteName, "总计:  " + QString::number(total_TestSuiteNum) + " 个模块");
         itemTotal->setText(column::UseTime, QString::number(total_UseTime) + "h");
         itemTotal->setText(column::OK, QString::number(total_OK));
         itemTotal->setText(column::NG, QString::number(total_NG));
         itemTotal->setText(column::ER, QString::number(total_ER));
         itemTotal->setText(column::InvalidHead, QString::number(total_InvalidHead));
 
-        if (totalNum == 0)
-        {
-            itemTotal->setText(column::TotalNum, "");
-            itemTotal->setText(column::PassRate, "");
-        }
-        else
+        if (totalNum != 0)
         {
             itemTotal->setText(column::TotalNum, QString::number(totalNum));
             itemTotal->setText(column::PassRate, QString::number(((float)total_OK / totalNum) * 100, 'f', 0) + "%");
+        }
+        else
+        {
+            itemTotal->setText(column::TotalNum, "");
+            itemTotal->setText(column::PassRate, "");
         }
 
         for (int i = 0; i <= len_itemColumn; ++i)
@@ -548,19 +510,48 @@ void LogAnalysis::updateItemTotal()
         {
             itemTotal->setTextAlignment(i, Qt::AlignCenter);
         }
+    }
+}
+
+void LogAnalysis::sortItems(int column)
+{
+
+    //删除最后一个item指针
+    delete ui->treeWidget_SearchResult->topLevelItem(ui->treeWidget_SearchResult->topLevelItemCount() - 1);
+
+    //进行排序
+    if(sortOrder)
+    {
+        sortOrder =false;
+        ui->treeWidget_SearchResult->sortByColumn(column,Qt::AscendingOrder);
+        qDebug() << "change AscendingOrder";
 
     }
+    else {
+        sortOrder =true;
+        ui->treeWidget_SearchResult->sortByColumn(column,Qt::DescendingOrder);
+        qDebug() << "change DescendingOrder";
+
+    }
+
+    //加上新的空item
+    ui->treeWidget_SearchResult->addTopLevelItem(new QTreeWidgetItem);
+
+    //将总计信息更新在这个最后一行的新item上
+    updateItemTotal( );
 }
 
 void LogAnalysis::updateTreeWidget()
 {
     ui->treeWidget_SearchResult->clear();
 
+
     total_UseTime = 0;
     total_OK = 0;
     total_NG = 0;
     total_ER = 0;
     total_InvalidHead = 0;
+    total_TestSuiteNum = 0;
     len_itemColumn = 9;
     progressDialog_Count = 0;
 
@@ -570,19 +561,22 @@ void LogAnalysis::updateTreeWidget()
     // 置零
     progressDialog_Count = 0;
 
-    QStringList xmls = map.keys();
+    QStringList testSuiteNames = map.keys();
 
-    for (const QString &xml : xmls)
+    for (const QString &testSuiteName : testSuiteNames)
     {
+        // 创建主item
         QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        QString xmlPath = map[xml]["xmlPath"].toString();
-        item->setText(column::TestSuiteName, xml);
+        QString xmlPath = map[testSuiteName]["xmlPath"].toString();
+
+        item->setText(column::TestSuiteName, testSuiteName);
         item->setIcon(column::TestSuiteName, QIcon(":/icon/icons8-oak-tree-48.png"));
         item->setToolTip(column::TestSuiteName, xmlPath);
-        item->setData(column::TestSuiteName, Qt::UserRole, map[xml]["allTestSuiteList"]);
+
+        item->setData(column::TestSuiteName, Qt::UserRole, map[testSuiteName]["allTestSuiteList"]);
         item->setData(column::ID, Qt::UserRole, "father");
         item->setData(column::XmlPath, Qt::UserRole, xmlPath);
-        item->setData(column::TMXmlPath, Qt::UserRole, xmlPath);
+        item->setData(column::TMXmlPath, Qt::UserRole, map[testSuiteName]["TMXmlPath"].toString());
 
         QMap<QString, QString> testSuiteInfo = getTestSuiteLogInfo(xmlPath);
 
@@ -594,7 +588,7 @@ void LogAnalysis::updateTreeWidget()
         int totalNum = num_OK + num_NG + num_ER + num_InvalidHead;
 
         item->setText(column::StartTime, testSuiteInfo["StartTime"]);
-        item->setText(column::UseTime, testSuiteInfo["UseTime"] + "h");
+        testSuiteInfo["UseTime"] == "unfinished" ? item->setText(column::UseTime, "unfinished") : item->setText(column::UseTime, testSuiteInfo["UseTime"] + "h");
         item->setText(column::TotalNum, QString::number(totalNum));
         item->setText(column::OK, testSuiteInfo["OK"]);
         item->setText(column::NG, testSuiteInfo["NG"]);
@@ -644,23 +638,74 @@ void LogAnalysis::updateTreeWidget()
         total_NG += num_NG;
         total_ER += num_ER;
         total_InvalidHead += num_InvalidHead;
+        ++total_TestSuiteNum;
 
+        QString dir = map[testSuiteName]["dirPath"].toString();
+        QStringList tclXmlNameList = map[testSuiteName]["tclXmlNameList"].toStringList();
+        QStringList tclTitleList = map[testSuiteName]["tclTitleList"].toStringList();
+        QStringList tclResultList = map[testSuiteName]["tclResultList"].toStringList();
+        QStringList tclBeginList = map[testSuiteName]["tclBeginList"].toStringList();
+
+        // 防止数组越界导致程序崩溃，提取获取所有列表中的最小值，再遍历
+        int minSize[4];
+
+        minSize[0] = tclXmlNameList.length();
+        minSize[1] = tclTitleList.length();
+        minSize[2] = tclResultList.length();
+        minSize[3] = tclBeginList.length();
+
+        int min = minSize[0];
+        for (short int i = 1; i < 4; ++i)
+        {
+            if (minSize[i] < min)
+            {
+                min = minSize[i];
+            }
+        }
         // 添加子item
-        for (const QString &tcl : map[xml]["tclScriptList"].toStringList())
+        for (int idx = 0; idx < min; ++idx)
         {
             QTreeWidgetItem *tclItem = new QTreeWidgetItem(item);
-            ++progressDialog_Count;
-            tclItem->setText(column::TestSuiteName, tcl);
-            tclItem->setIcon(column::TestSuiteName, QIcon(":/icon/icons8-file-64 (1).png"));
+
+            tclItem->setText(column::TestSuiteName, tclXmlNameList[idx].left(tclXmlNameList[idx].lastIndexOf('_')) + ".tcl");
+            tclItem->setText(column::StartTime, tclBeginList[idx]);
+
             tclItem->setData(column::ID, Qt::UserRole, "son");
-            probar->setValue(progressDialog_Count);
-            probar->setLabelText("添加：" + tcl);
+            tclItem->setData(column::XmlPath, Qt::UserRole, dir + "/" + tclXmlNameList[idx]);
+            tclItem->setData(column::TMXmlPath, Qt::UserRole, dir + "/TestMaster_" + tclXmlNameList[idx]);
+
+            if (tclResultList[idx] == "OK")
+            {
+                tclItem->setIcon(column::TestSuiteName, QIcon(":/icon/icons8-ok-48.png"));
+            }
+            else if (tclResultList[idx] == "NG")
+            {
+                tclItem->setIcon(column::TestSuiteName, QIcon(":/icon/icons8-n-40.png"));
+            }
+            else if (tclResultList[idx] == "ER")
+            {
+                tclItem->setIcon(column::TestSuiteName, QIcon(":/icon/error-100.png"));
+            }
+            else
+            {
+                tclItem->setIcon(column::TestSuiteName, QIcon(":/icon/icons8-file-64 (1).png"));
+            }
+
+            probar->setLabelText("添加：" + tclXmlNameList[idx]);
         }
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
     }
 
-//创建行尾统计栏
-    QTreeWidgetItem *totalItem = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-totalItem->setText(column::TestSuiteName, "总计");
+    // 创建一个空的item作为行尾统计栏
+    ui->treeWidget_SearchResult->addTopLevelItem(new QTreeWidgetItem);
+
+    // 更新总计信息到这个空item里
     updateItemTotal();
+
+    // 删除进度条
     delete probar;
 }
+
+
+

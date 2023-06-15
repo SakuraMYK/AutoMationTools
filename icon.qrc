@@ -35,5 +35,11 @@
         <file>icon/icons8-open-book-100.png</file>
         <file>icon/icons8-xml-100.png</file>
         <file>icon/icons8-sum-60.png</file>
+        <file>icon/icons8-sum-49.png</file>
+        <file>icon/icons8-error-40.png</file>
+        <file>icon/icons8-ng-button-48.png</file>
+        <file>icon/icons8-ok-48.png</file>
+        <file>icon/icons8-n-40.png</file>
+        <file>icon/error-100.png</file>
     </qresource>
 </RCC>

@@ -60,6 +60,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton_Sort">
+           <property name="text">
+            <string>sort</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -96,52 +103,52 @@
          </attribute>
          <column>
           <property name="text">
-           <string> 测试集 </string>
+           <string>   测试集   </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string> 开始时间 </string>
+           <string>   开始时间  </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string> 用时 </string>
+           <string>   用时   </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>总数</string>
+           <string>   总数  </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string> OK </string>
+           <string>   OK   </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string> NG </string>
+           <string>   NG   </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string> ER </string>
+           <string>   ER   </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>InvalidHead</string>
+           <string>   InvalidHead  </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>通过率</string>
+           <string>   通过率  </string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>core文件</string>
+           <string>   core   </string>
           </property>
          </column>
          <column>

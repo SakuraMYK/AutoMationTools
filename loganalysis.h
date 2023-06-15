@@ -9,6 +9,7 @@
 #include <QTextEdit>
 #include <QProgressDialog>
 #include <windows.h>
+#include <QByteArray>
 namespace Ui
 {
     class LogAnalysis;
@@ -21,19 +22,19 @@ class LogAnalysis : public QWidget
 public:
     explicit LogAnalysis(QWidget *parent = nullptr);
     ~LogAnalysis();
-    void addOtherLogfileContextMenuActionsToItem(const QPoint &pos);
-    QString LongestCommonSubstring(QString &a, QString &b);
     void updateTreeWidget();
     QMap<QString, QString> getTestSuiteLogInfo(const QString &filePath);
     QMap<QString, QString> getScriptLogInfo(const QString &filePath);
-    QStringList getAllTclFromTestSuite(const QString &xmlPath);
+    QMap<QString, QStringList> getAllScriptInfoFromTestSuiteLog(const QString &xmlPath);
     QStringList getAllTestSuiteXML(const QString &dir);
-    void openXML(const QString &xml);
+    void openXML(const QString &xmlPath);
     void onTriggered(const QPoint &pos);
     QMap<QString, QMap<QString, QVariant>> traverseDirCreateTstMap();
     QProgressDialog* progressDialog();
-    void showXMLInIE(const QString &xmlPath);
     void updateItemTotal();
+    void sortItems(int column);
+
+
 
 private:
     Ui::LogAnalysis *ui;
@@ -46,6 +47,8 @@ private:
     int total_ER;
     int total_InvalidHead;
     short int len_itemColumn;
+    short int total_TestSuiteNum;
+    bool sortOrder = true;
     enum column
     {
         TestSuiteName,
