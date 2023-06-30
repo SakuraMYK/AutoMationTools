@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QShortcut>
 #include <QDateTime>
+#include <QIcon>
 
 
 namespace Ui {

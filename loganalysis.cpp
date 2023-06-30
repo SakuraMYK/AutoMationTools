@@ -5,10 +5,18 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
 {
     ui->setupUi(this);
     isExpandAll = false;
+
     ui->pushButton_ExpandAll->setIconSize(QSize(32, 32));
+    ui->pushButton_OpenExcel->setIconSize(QSize(32, 32));
+
     ui->pushButton_SelectDir->setIcon(QIcon(":/icon/folder.ico"));
-    //    ui->pushButton_SelectDir->setIconSize(QSize(25,25));
-    //    ui->pushButton_SelectDir->setStyleSheet("border-width: 0px;");
+    ui->pushButton_OpenExcel->setIcon(QIcon(":/icon/icons8-excel-128.png"));
+    ui->pushButton_OpenExcel->setDisabled(true);
+
+    connect(ui->pushButton_ExportExcel, &QPushButton::clicked, this, [=]()
+            { exportExcel(); });
+
+
     connect(ui->pushButton_Statistics, &QPushButton::clicked, this, &LogAnalysis::updateTreeWidget);
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
             {
@@ -57,12 +65,9 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
 
     ui->lineEdit_Dir->setText("D:\\log");
 
-
-    // setSectionsClickable 不开起，那么QHeaderView::sectionClicked信号将无法触发
+    // setSectionsClickable 需要开启，不然 QHeaderView::sectionClicked信号将无法触发
     ui->treeWidget_SearchResult->header()->setSectionsClickable(true);
     connect(ui->treeWidget_SearchResult->header(), &QHeaderView::sectionClicked, this, &LogAnalysis::sortItems);
-
-
 }
 
 LogAnalysis::~LogAnalysis()
@@ -70,26 +75,33 @@ LogAnalysis::~LogAnalysis()
     delete ui;
 }
 
-// 调用IE浏览器打开xml文件
-void LogAnalysis::openXML(const QString &xmlPath)
+// 外部打开 文件/文件夹
+void LogAnalysis::openFile(const QString &filePath, FileOperator fileOperator = OpenWithExplorer)
 {
-    if (xmlPath.isEmpty())
+    QString path = filePath;
+    path.replace('/', '\\'); // 只能识别 "\"
+
+    switch (fileOperator)
     {
-        qDebug() << __func__ << "warning:"
-                 << "path is Empty!";
-        return;
-    }
-
-    LPCWSTR url = reinterpret_cast<LPCWSTR>(xmlPath.utf16());
-
-    // 使用 ShellExecute 函数打开文件
-    intptr_t result = reinterpret_cast<intptr_t>(ShellExecute(NULL, L"open", L"iexplore.exe", url, NULL, SW_SHOWNORMAL));
-
-    if (result <= 32)
-    {
-        // 打开失败，可以根据具体错误进行处理
-        // 使用 GetLastError() 获取错误代码
-        qDebug() << __func__ << "warning:" << xmlPath << "open failed!" << GetLastError();
+    case OpenWithIE:
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        qDebug() << "into OpenWithIE";
+        break;
+    case OpenWithNotepad:
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        qDebug() << "into OpenWithNotepad";
+        break;
+    case OpenWithExplorer:
+        ShellExecuteW(NULL, L"open", L"explorer", path.toStdWString().c_str(), NULL, SW_SHOW);
+        qDebug() << "into OpenWithExplorer:" << path.toStdWString();
+        break;
+    case OpenWithExplorerAndSelect:
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        ShellExecuteW(NULL, L"open", L"explorer", QString("/select, \"%1\"").arg(path).toStdWString().c_str(), NULL, SW_SHOW);
+        qDebug() << "into OpenWithExplorerAndSelect:" << QString("/select, \"%1\"").arg(path).toStdWString();
+        break;
+    default:
+        break;
     }
 }
 
@@ -127,39 +139,6 @@ QMap<QString, QString> LogAnalysis::getTestSuiteLogInfo(const QString &xml)
     else
     {
         map["UseTime"] = "unfinished";
-
-        //        QStringList timeList;
-        //        QRegularExpressionMatchIterator matchAllTime = re_TIME.globalMatch(xmlContent);
-        //        while (matchAllTime.hasNext())
-        //        {
-        //            timeList << matchAllTime.next().captured(1);
-        //        }
-
-        //        if (!timeList.isEmpty())
-        //        {
-        //            qDebug() << "*******************************************************************";
-        //            qDebug() << "old time:" << timeList.first();
-        //            qDebug() << "new time:" << timeList.last();
-
-        //            QDateTime oldDateTime = QDateTime::fromString(timeList.first(), "yyyy-MM-dd hh:mm:ss");
-        //            QDateTime newDateTime = QDateTime::fromString(timeList.last(), "yyyy-MM-dd hh:mm:ss");
-
-        //            qint64 oldTimestamp = oldDateTime.toMSecsSinceEpoch();
-        //            qint64 newTimestamp = newDateTime.toMSecsSinceEpoch();
-        //            qDebug() << "oldTimestamp:" << oldTimestamp;
-        //            qDebug() << "newTimestamp:" << newTimestamp;
-
-        //            qint64 diffMilliseconds = newTimestamp - oldTimestamp;
-        //            qint64 hours = diffMilliseconds / (1000 * 60 * 60); // 将毫秒转换为小时
-
-        //            qDebug() << "Count output time:" << hours;
-
-        //            matchList << QString::number(hours) + "h used NotCompleted";
-        //        }
-        //        else
-        //        {
-        //            matchList << "Not started";
-        //        }
     }
     map["StartTime"] = (re_StartTIME.match(xmlContent).hasMatch() ? re_StartTIME.match(xmlContent).captured(1) : "");
     map["OK"] = (re_OK_Num.match(xmlContent).hasMatch() ? re_OK_Num.match(xmlContent).captured(1) : "");
@@ -321,23 +300,28 @@ void LogAnalysis::onTriggered(const QPoint &pos)
         QAction *actionDelete = new QAction("删除", menu);
         QAction *actionOpenXml = new QAction("打开xml", menuOpen);
         QAction *actionOpenTMXml = new QAction("打开TestMaster xml", menuOpen);
+        QAction *actionOpenLocalFile = new QAction("打开本地文件", menuOpen);
 
         menuOpen->setIcon(QIcon(":/icon/icons8-xml-100.png"));
         selectOtherLog->setIcon(QIcon(":/icon/icons8-time-80.png"));
         actionDelete->setIcon(QIcon(":/icon/icons8-delete-100.png"));
 
         connect(actionDelete, &QAction::triggered, this, [=]()
-                {total_UseTime -= item->data(column::UseTime,Qt::UserRole).toFloat();
-                total_OK -= item->data(column::OK,Qt::UserRole).toInt();
-                total_NG -= item->data(column::NG,Qt::UserRole).toInt();
-                total_ER -= item->data(column::ER,Qt::UserRole).toInt();
-                total_InvalidHead -= item->data(column::InvalidHead,Qt::UserRole).toInt();
-                delete item;
-                updateItemTotal(); });
+                {
+                    total_UseTime -= item->data(column::UseTime,Qt::UserRole).toFloat();
+                    total_OK -= item->data(column::OK,Qt::UserRole).toInt();
+                    total_NG -= item->data(column::NG,Qt::UserRole).toInt();
+                    total_ER -= item->data(column::ER,Qt::UserRole).toInt();
+                    total_InvalidHead -= item->data(column::InvalidHead,Qt::UserRole).toInt();
+                    total_TestSuiteNum -= 1;
+                    delete item;
+                    updateItemTotal(); });
         connect(actionOpenXml, &QAction::triggered, this, [=]()
-                { openXML(item->data(column::XmlPath, Qt::UserRole).toString()); });
+                { openFile(item->data(column::XmlPath, Qt::UserRole).toString(), FileOperator::OpenWithIE); });
         connect(actionOpenTMXml, &QAction::triggered, this, [=]()
-                { openXML(item->data(column::TMXmlPath, Qt::UserRole).toString()); });
+                { openFile(item->data(column::TMXmlPath, Qt::UserRole).toString(), FileOperator::OpenWithIE); });
+        connect(actionOpenLocalFile, &QAction::triggered, this, [=]()
+                { openFile(item->toolTip(0), FileOperator::OpenWithExplorerAndSelect); });
 
         bool first = true;
 
@@ -359,36 +343,38 @@ void LogAnalysis::onTriggered(const QPoint &pos)
             selectOtherLog->addAction(switchLog);
         }
 
-        menu->addAction(actionDelete);
-        menu->addMenu(selectOtherLog);
         menu->addMenu(menuOpen);
+        menu->addMenu(selectOtherLog);
+        menu->addAction(actionDelete);
         menuOpen->addAction(actionOpenXml);
         menuOpen->addAction(actionOpenTMXml);
+        menuOpen->addAction(actionOpenLocalFile);
 
         menu->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
         delete menu;
     }
     else if (item && item->data(column::ID, Qt::UserRole).toString() == "son")
     {
-        QMenu *menu = new QMenu(ui->treeWidget_SearchResult);
         QMenu *menuOpen = new QMenu("打开", ui->treeWidget_SearchResult);
         QAction *actionOpenXml = new QAction("打开xml", menuOpen);
         QAction *actionOpenTMXml = new QAction("打开TestMaster xml", menuOpen);
+        QAction *actionOpenLocalFile = new QAction("打开本地文件", menuOpen);
 
         menuOpen->setIcon(QIcon(":/icon/icons8-xml-100.png"));
 
         connect(actionOpenXml, &QAction::triggered, this, [=]()
-                {
-            qDebug() << "item->data(column::XmlPath, Qt::UserRole).toString()"<< item->data(column::XmlPath, Qt::UserRole).toString();
-        openXML(item->data(column::XmlPath, Qt::UserRole).toString()); });
+                { openFile(item->data(column::XmlPath, Qt::UserRole).toString(), FileOperator::OpenWithIE); });
         connect(actionOpenTMXml, &QAction::triggered, this, [=]()
-                { openXML(item->data(column::TMXmlPath, Qt::UserRole).toString()); });
-        menu->addMenu(menuOpen);
+                { openFile(item->data(column::TMXmlPath, Qt::UserRole).toString(), FileOperator::OpenWithIE); });
+        connect(actionOpenLocalFile, &QAction::triggered, this, [=]()
+                { openFile(item->toolTip(0), FileOperator::OpenWithExplorerAndSelect); });
+
         menuOpen->addAction(actionOpenXml);
         menuOpen->addAction(actionOpenTMXml);
+        menuOpen->addAction(actionOpenLocalFile);
 
-        menu->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
-        delete menu;
+        menuOpen->exec(ui->treeWidget_SearchResult->viewport()->mapToGlobal(pos));
+        delete menuOpen;
     }
 }
 
@@ -469,13 +455,10 @@ QProgressDialog *LogAnalysis::progressDialog()
     return p;
 }
 
-
-
-
 // 更新TreeWigdet最后一行的item，即更新总计
-void LogAnalysis::updateItemTotal( )
+void LogAnalysis::updateItemTotal()
 {
-    //获取最后一行的item指针
+    // 获取最后一行的item指针
     QTreeWidgetItem *itemTotal = ui->treeWidget_SearchResult->topLevelItem(ui->treeWidget_SearchResult->topLevelItemCount() - 1);
 
     itemTotal->setIcon(0, QIcon(":/icon/icons8-sum-49.png"));
@@ -516,35 +499,149 @@ void LogAnalysis::updateItemTotal( )
 void LogAnalysis::sortItems(int column)
 {
 
-    //删除最后一个item指针
+    // 删除最后一个item指针
     delete ui->treeWidget_SearchResult->topLevelItem(ui->treeWidget_SearchResult->topLevelItemCount() - 1);
 
-    //进行排序
-    if(sortOrder)
+    // 进行排序
+    if (sortOrder)
     {
-        sortOrder =false;
-        ui->treeWidget_SearchResult->sortByColumn(column,Qt::AscendingOrder);
-        qDebug() << "change AscendingOrder";
-
+        sortOrder = false;
+        ui->treeWidget_SearchResult->sortByColumn(column, Qt::AscendingOrder);
     }
-    else {
-        sortOrder =true;
-        ui->treeWidget_SearchResult->sortByColumn(column,Qt::DescendingOrder);
-        qDebug() << "change DescendingOrder";
-
+    else
+    {
+        sortOrder = true;
+        ui->treeWidget_SearchResult->sortByColumn(column, Qt::DescendingOrder);
     }
 
-    //加上新的空item
+    // 加上新的空item
     ui->treeWidget_SearchResult->addTopLevelItem(new QTreeWidgetItem);
 
-    //将总计信息更新在这个最后一行的新item上
-    updateItemTotal( );
+    // 将总计信息更新在这个最后一行的新item上
+    updateItemTotal();
+}
+
+// 数据导出Excel
+void LogAnalysis::exportExcel()
+{
+    if (ui->treeWidget_SearchResult->topLevelItemCount() > 0)
+    {
+        progressDialog_Count = ui->treeWidget_SearchResult->topLevelItemCount() + 5;
+        QProgressDialog *probar =  progressDialog();
+        probar->setWindowTitle("导出Excel");
+        progressDialog_Count = 0;
+
+        // 创建Excel应用程序对象
+        QAxObject excel("Excel.Application");
+        excel.setProperty("Visible", false);
+
+        probar->setLabelText("创建Excel应用程序对象");
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
+
+        // 创建工作簿
+        QAxObject *workbooks = excel.querySubObject("Workbooks");
+        QAxObject *workbook = workbooks->querySubObject("Add");
+
+        probar->setLabelText("创建工作簿");
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
+
+        // 获取第一个工作表
+        QAxObject *sheets = workbook->querySubObject("Sheets");
+        QAxObject *sheet = sheets->querySubObject("Item(1)");
+
+        probar->setLabelText("创建Sheets");
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
+
+        // 在 单元格写入数据
+        sheet->querySubObject("Range(const QString&)", "A1")->dynamicCall("SetValue(const QVariant&)", "测试集");
+        sheet->querySubObject("Range(const QString&)", "B1")->dynamicCall("SetValue(const QVariant&)", "开始时间");
+        sheet->querySubObject("Range(const QString&)", "C1")->dynamicCall("SetValue(const QVariant&)", "用时");
+        sheet->querySubObject("Range(const QString&)", "D1")->dynamicCall("SetValue(const QVariant&)", "总数");
+        sheet->querySubObject("Range(const QString&)", "E1")->dynamicCall("SetValue(const QVariant&)", "OK");
+        sheet->querySubObject("Range(const QString&)", "F1")->dynamicCall("SetValue(const QVariant&)", "NG");
+        sheet->querySubObject("Range(const QString&)", "G1")->dynamicCall("SetValue(const QVariant&)", "ER");
+        sheet->querySubObject("Range(const QString&)", "H1")->dynamicCall("SetValue(const QVariant&)", "InvalidHead");
+        sheet->querySubObject("Range(const QString&)", "I1")->dynamicCall("SetValue(const QVariant&)", "通过率");
+        sheet->querySubObject("Range(const QString&)", "J1")->dynamicCall("SetValue(const QVariant&)", "是否产出core");
+
+        probar->setLabelText("写入首行");
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
+
+        // 设置内容水平居中
+        sheet->querySubObject("Range(const QString&)", "A1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "B1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "C1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "D1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "E1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "F1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "G1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "H1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "I1")->setProperty("HorizontalAlignment", -4108);
+        sheet->querySubObject("Range(const QString&)", "J1")->setProperty("HorizontalAlignment", -4108);
+
+
+        int row = 2;
+
+        for (int num = 0; num < ui->treeWidget_SearchResult->topLevelItemCount(); ++num)
+        {
+            QString rowNum = QString::number(row);
+            QTreeWidgetItem *item = ui->treeWidget_SearchResult->topLevelItem(num);
+            sheet->querySubObject("Range(const QString&)", 'A' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::TestSuiteName));
+            sheet->querySubObject("Range(const QString&)", 'B' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::StartTime));
+            sheet->querySubObject("Range(const QString&)", 'C' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::UseTime));
+            sheet->querySubObject("Range(const QString&)", 'D' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::TotalNum));
+            sheet->querySubObject("Range(const QString&)", 'E' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::OK));
+            sheet->querySubObject("Range(const QString&)", 'F' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::NG));
+            sheet->querySubObject("Range(const QString&)", 'G' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::ER));
+            sheet->querySubObject("Range(const QString&)", 'H' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::InvalidHead));
+            sheet->querySubObject("Range(const QString&)", 'I' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::PassRate));
+            sheet->querySubObject("Range(const QString&)", 'J' + rowNum)->dynamicCall("SetValue(const QVariant&)", item->text(column::CoreFile));
+
+            // 除了A列外水平居中
+            sheet->querySubObject("Range(const QString&)", 'B' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'C' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'D' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'E' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'F' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'G' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'H' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'I' + rowNum)->setProperty("HorizontalAlignment", -4108);
+            sheet->querySubObject("Range(const QString&)", 'J' + rowNum)->setProperty("HorizontalAlignment", -4108);
+
+            probar->setLabelText("写入数据 "+item->text(column::TestSuiteName));
+            probar->setValue(progressDialog_Count);
+            ++progressDialog_Count;
+
+            ++row;
+        }
+
+        QString fileName = QDir::toNativeSeparators(QDir::currentPath().left(QDir::currentPath().lastIndexOf('/')) + "/" + QDateTime::currentDateTime().toString("yyyyMMdd_hh-mm-ss") + ".xlsx");
+        // 保存文件
+        workbook->dynamicCall("SaveAs(const QString&)", fileName);
+
+        // 关闭工作簿和Excel应用程序
+        workbook->dynamicCall("Close()");
+        excel.dynamicCall("Quit()");
+
+        probar->setLabelText("保存文件并退出");
+        probar->setValue(progressDialog_Count);
+        ++progressDialog_Count;
+
+        delete probar;
+    }
+    else
+    {
+        qDebug() << "不存在子控件，无法导出Excel";
+    }
 }
 
 void LogAnalysis::updateTreeWidget()
 {
     ui->treeWidget_SearchResult->clear();
-
 
     total_UseTime = 0;
     total_OK = 0;
@@ -589,7 +686,6 @@ void LogAnalysis::updateTreeWidget()
 
         item->setText(column::StartTime, testSuiteInfo["StartTime"]);
         testSuiteInfo["UseTime"] == "unfinished" ? item->setText(column::UseTime, "unfinished") : item->setText(column::UseTime, testSuiteInfo["UseTime"] + "h");
-        item->setText(column::TotalNum, QString::number(totalNum));
         item->setText(column::OK, testSuiteInfo["OK"]);
         item->setText(column::NG, testSuiteInfo["NG"]);
         item->setText(column::ER, testSuiteInfo["ER"]);
@@ -608,24 +704,34 @@ void LogAnalysis::updateTreeWidget()
         }
         else
         {
+            item->setText(column::TotalNum, QString::number(totalNum));
             item->setText(column::PassRate, QString::number(((float)num_OK / totalNum) * 100, 'f', 0) + "%");
         }
 
         if (totalNum == num_OK)
         {
-            // 全Pass的刷绿色
-            for (int i = 0; i <= len_itemColumn; ++i)
+            if (testSuiteInfo["UseTime"] == "unfinished")
             {
-                item->setBackground(i, QBrush(QColor(234, 254, 228)));
+                // 未完成刷其他颜色
+                item->setBackground(column::UseTime, QBrush(QColor(230, 118, 225)));
+                item->setForeground(column::UseTime, QBrush(QColor(255, 255, 255)));
+            }
+            else
+            {
+                // 全Pass的刷绿色
+                for (int i = 0; i <= len_itemColumn; ++i)
+                {
+                    item->setBackground(i, QBrush(QColor(234, 254, 228)));
+                }
             }
         }
         else
         {
-            // 非全 OK的均刷红
-            for (int i = 0; i <= len_itemColumn; ++i)
-            {
-                item->setBackground(i, QBrush(QColor(254, 228, 228)));
-            }
+            //            // 非全 OK的均刷红
+            //            for (int i = 0; i <= len_itemColumn; ++i)
+            //            {
+            //                item->setBackground(i, QBrush(QColor(254, 228, 228)));
+            //            }
         }
         for (int i = 1; i <= len_itemColumn; ++i)
         {
@@ -666,13 +772,36 @@ void LogAnalysis::updateTreeWidget()
         for (int idx = 0; idx < min; ++idx)
         {
             QTreeWidgetItem *tclItem = new QTreeWidgetItem(item);
+            QString fileNameNoSuffix = tclXmlNameList[idx].left(tclXmlNameList[idx].lastIndexOf('_'));
+            QString tclfileName = fileNameNoSuffix + ".tcl";
+            QString xmlPath = dir + "/" + tclXmlNameList[idx];
+            QString TMXmlPath = dir + "/TestMaster_" + tclXmlNameList[idx];
+            QString tclPath = dir + "/" + tclfileName;
 
-            tclItem->setText(column::TestSuiteName, tclXmlNameList[idx].left(tclXmlNameList[idx].lastIndexOf('_')) + ".tcl");
+            // 设置关联文件，后期用于一块连带拷贝（log、TMlog、tcl脚本、setup脚本、clear脚本、topo文件）
+            QStringList relatedFileList;
+            relatedFileList << xmlPath << TMXmlPath << tclPath;
+
+            //            // 获取相同topo号的 setup、clear 文件（需要放到 onTriggered 中，即查即用，没必要这里面进行，徒增时间复杂度）
+            //            QString topoNum = fileNameNoSuffix.right(fileNameNoSuffix.lastIndexOf('_'));
+            //            for (const QString &fileName : tclXmlNameList) {
+            //                if(
+            //                    fileName.right(fileName.lastIndexOf('_')) == topoNum &&
+            //                    (fileName.contains("setup") || fileName.contains("clear"))
+            //                    )
+            //                {
+            //                    relatedFileList << dir+"/"+fileName+".tcl";
+            //                }
+            //            }
+
+            tclItem->setText(column::TestSuiteName, tclfileName);
             tclItem->setText(column::StartTime, tclBeginList[idx]);
+            tclItem->setToolTip(0, tclPath);
 
             tclItem->setData(column::ID, Qt::UserRole, "son");
-            tclItem->setData(column::XmlPath, Qt::UserRole, dir + "/" + tclXmlNameList[idx]);
-            tclItem->setData(column::TMXmlPath, Qt::UserRole, dir + "/TestMaster_" + tclXmlNameList[idx]);
+            tclItem->setData(column::XmlPath, Qt::UserRole, xmlPath);
+            tclItem->setData(column::TMXmlPath, Qt::UserRole, TMXmlPath);
+            tclItem->setData(column::RelatedFileList, Qt::UserRole, relatedFileList);
 
             if (tclResultList[idx] == "OK")
             {
@@ -706,6 +835,3 @@ void LogAnalysis::updateTreeWidget()
     // 删除进度条
     delete probar;
 }
-
-
-

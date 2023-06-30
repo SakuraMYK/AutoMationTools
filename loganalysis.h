@@ -10,6 +10,11 @@
 #include <QProgressDialog>
 #include <windows.h>
 #include <QByteArray>
+#include <QDesktopServices>
+#include <QIcon>
+#include <QAxObject>
+#include <QAxWidget>
+
 namespace Ui
 {
     class LogAnalysis;
@@ -18,22 +23,6 @@ namespace Ui
 class LogAnalysis : public QWidget
 {
     Q_OBJECT
-
-public:
-    explicit LogAnalysis(QWidget *parent = nullptr);
-    ~LogAnalysis();
-    void updateTreeWidget();
-    QMap<QString, QString> getTestSuiteLogInfo(const QString &filePath);
-    QMap<QString, QString> getScriptLogInfo(const QString &filePath);
-    QMap<QString, QStringList> getAllScriptInfoFromTestSuiteLog(const QString &xmlPath);
-    QStringList getAllTestSuiteXML(const QString &dir);
-    void openXML(const QString &xmlPath);
-    void onTriggered(const QPoint &pos);
-    QMap<QString, QMap<QString, QVariant>> traverseDirCreateTstMap();
-    QProgressDialog* progressDialog();
-    void updateItemTotal();
-    void sortItems(int column);
-
 
 
 private:
@@ -49,6 +38,7 @@ private:
     short int len_itemColumn;
     short int total_TestSuiteNum;
     bool sortOrder = true;
+
     enum column
     {
         TestSuiteName,
@@ -64,7 +54,34 @@ private:
         ID,
         XmlPath,
         TMXmlPath,
+        RelatedFileList
     };
+
+    enum FileOperator
+    {
+        OpenWithIE,
+        OpenWithNotepad,
+        OpenWithExplorer,
+        OpenWithExplorerAndSelect,
+    };
+
+public:
+    explicit LogAnalysis(QWidget *parent = nullptr);
+    ~LogAnalysis();
+    QMap<QString, QString> getTestSuiteLogInfo(const QString &filePath);
+    QMap<QString, QString> getScriptLogInfo(const QString &filePath);
+    QMap<QString, QStringList> getAllScriptInfoFromTestSuiteLog(const QString &xmlPath);
+    QStringList getAllTestSuiteXML(const QString &dir);
+    QMap<QString, QMap<QString, QVariant>> traverseDirCreateTstMap();
+    QProgressDialog* progressDialog();
+
+    void updateTreeWidget();
+    void openFile(const QString &filePath, FileOperator fileOperator);
+    void onTriggered(const QPoint &pos);
+    void updateItemTotal();
+    void sortItems(int column);
+    void exportExcel();
+
 };
 
 

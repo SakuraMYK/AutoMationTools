@@ -167,7 +167,6 @@ void TestSuite::initCheckBox()
     ui->checkBox_Optimized->setToolTip("<span style='font-size:12pt;'>topo优化执行</span>");
     ui->checkBox_Shutdown->setToolTip("<span style='font-size:12pt;'>每次测试集跑完时shutdown接口</span>");
     ui->checkBox_Separator->setToolTip("<span style='font-size:12pt;'>每隔一定数量位置添加一行分隔符</span>");
-    ui->checkBox_TotalTestSuite->setToolTip("<span style='font-size:12pt;'>创建一个包含所有测试集的.tst文件，默认文件名为Main.tst</span>");
     ui->checkBox_TestSuite->setToolTip("<span style='font-size:12pt;'>创建指定路径下所有模块的测试集</span>");
 }
 
@@ -197,7 +196,6 @@ void TestSuite::initTimer()
     timer->setInterval(800);
     connect(timer, &QTimer::timeout, this, [=]()
             {
-        ui->checkBox_TotalTestSuite->setStyleSheet("background-color: #f0f0f0");
         ui->checkBox_TestSuite->setStyleSheet("background-color: #f0f0f0");
         ui->label_Tip->setText(""); });
 }
@@ -229,24 +227,15 @@ void TestSuite::initPushButton()
     ui->pushButton_Create->setEnabled(false);
     connect(ui->pushButton_Create, &QPushButton::clicked, this, [&]()
             {
-                if (ui->checkBox_TestSuite->checkState() == Qt::Checked && ui->checkBox_TotalTestSuite->checkState() == Qt::Checked)
-                {
-                    createTestSuite();
-                    createTotalTestSuite();
-                }
-                else if (ui->checkBox_TestSuite->checkState() == Qt::Checked)
+                if (ui->checkBox_TestSuite->checkState() == Qt::Checked)
                 {
                     createTestSuite();
                 }
-                else if (ui->checkBox_TotalTestSuite->checkState() == Qt::Checked)
-                {
-                    createTotalTestSuite();
-                }
+
                 else
                 {
                     timer->start();
                     // 通过着色来提示用户未选用创建模式
-                    ui->checkBox_TotalTestSuite->setStyleSheet("background-color: #B8B8B8");
                     ui->checkBox_TestSuite->setStyleSheet("background-color: #B8B8B8");
                     ui->label_Tip->setText("未勾选创建内容!");
                 } });

@@ -64,13 +64,6 @@
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QCheckBox" name="checkBox_TotalTestSuite">
-               <property name="text">
-                <string>测试总集</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -82,7 +75,23 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>创建</string>
+              <string notr="true">创建</string>
+             </property>
+             <property name="icon">
+              <iconset resource="icon.qrc">
+               <normaloff>:/icon/icons8-add-file-100.png</normaloff>:/icon/icons8-add-file-100.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>71</width>
+               <height>71</height>
+              </size>
+             </property>
+             <property name="shortcut">
+              <string notr="true" comment="3"/>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -172,6 +181,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icon.qrc"/>
+ </resources>
  <connections/>
 </ui>
