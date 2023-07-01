@@ -14,20 +14,23 @@ SOURCES += \
     loganalysis.cpp \
     main.cpp \
     mainwindow.cpp \
-    testsuite.cpp
+    testsuite.cpp \
+    totaltestsuite.cpp
 
 HEADERS += \
     debuginfo.h \
     gbkfileio.h \
     loganalysis.h \
     mainwindow.h \
-    testsuite.h
+    testsuite.h \
+    totaltestsuite.h
 
 FORMS += \
     debuginfo.ui \
     loganalysis.ui \
     mainwindow.ui \
-    testsuite.ui
+    testsuite.ui \
+    totaltestsuite.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -7,7 +7,6 @@ TestSuite::TestSuite(QWidget *parent)
     ui->setupUi(this);
     initLineEdit();
     initComboBox();
-    initTimer();
     initTreeWidget();
     initPushButton();
     initCheckBox();
@@ -85,7 +84,7 @@ void TestSuite::itemChanged(QTreeWidgetItem *item, int column)
         }
         else
         {
-            //            qDebug() << "item:" << item << "column:" <<column << "has no parent object";
+                        qDebug() << "item:" << item << "column:" <<column << "has no parent object";
         }
     }
     updateSelectFileTip();
@@ -162,12 +161,10 @@ void TestSuite::updateSelectFileTip()
 
 void TestSuite::initCheckBox()
 {
-    ui->checkBox_TestSuite->setCheckState(Qt::Checked);
     ui->checkBox_Chkcfg->setToolTip("<span style='font-size:12pt;'>每个脚本执行完后检查设备配置（较为耗时）</span>");
     ui->checkBox_Optimized->setToolTip("<span style='font-size:12pt;'>topo优化执行</span>");
     ui->checkBox_Shutdown->setToolTip("<span style='font-size:12pt;'>每次测试集跑完时shutdown接口</span>");
     ui->checkBox_Separator->setToolTip("<span style='font-size:12pt;'>每隔一定数量位置添加一行分隔符</span>");
-    ui->checkBox_TestSuite->setToolTip("<span style='font-size:12pt;'>创建指定路径下所有模块的测试集</span>");
 }
 
 void TestSuite::initLineEdit()
@@ -189,17 +186,6 @@ void TestSuite::initComboBox()
     ui->comboBox_Separator->setEnabled(false);
 }
 
-void TestSuite::initTimer()
-{
-    // 实例化定时器对象
-    timer = new QTimer(this);
-    timer->setInterval(800);
-    connect(timer, &QTimer::timeout, this, [=]()
-            {
-        ui->checkBox_TestSuite->setStyleSheet("background-color: #f0f0f0");
-        ui->label_Tip->setText(""); });
-}
-
 void TestSuite::initTreeWidget()
 {
     ui->treeWidget_SearchResult->setHeaderHidden(true);
@@ -212,33 +198,20 @@ void TestSuite::initTreeWidget()
 
 void TestSuite::initPushButton()
 {
-    ui->pushButton_SelectDir->setIcon(QIcon(":/icon/folder.ico"));
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
             {
-        if  (historicalPath.isEmpty()){
-            historicalPath = "./";
-        }
-        historicalPath = QFileDialog::getExistingDirectory(this, "选择项目文件夹", historicalPath);
-        if(!historicalPath.isEmpty())
-            {
-            ui->lineEdit_Dir->setText(historicalPath);
-        } });
+            if  (historicalPath.isEmpty()){
+                historicalPath = "./";
+            }
+            historicalPath = QFileDialog::getExistingDirectory(this, "选择项目文件夹", historicalPath);
+            if(!historicalPath.isEmpty())
+                {
+                ui->lineEdit_Dir->setText(historicalPath);
+            } });
 
     ui->pushButton_Create->setEnabled(false);
     connect(ui->pushButton_Create, &QPushButton::clicked, this, [&]()
-            {
-                if (ui->checkBox_TestSuite->checkState() == Qt::Checked)
-                {
-                    createTestSuite();
-                }
-
-                else
-                {
-                    timer->start();
-                    // 通过着色来提示用户未选用创建模式
-                    ui->checkBox_TestSuite->setStyleSheet("background-color: #B8B8B8");
-                    ui->label_Tip->setText("未勾选创建内容!");
-                } });
+            { createTestSuite(); });
 }
 
 // 创建包含所有模块的测试集，即总测试集
@@ -302,7 +275,7 @@ void TestSuite::createTotalTestSuite()
     }
     else
     {
-        ui->label_Tip->setText("path is empty !");
+        ui->label_InfoTip->setText("path is empty !");
     }
 }
 
@@ -410,7 +383,7 @@ void TestSuite::createTestSuite()
         io.writeFile(tstFilePath, tstContent);
 
         finishTip = tstFilePath + "创建完成";
-        ui->label_Tip->setText(finishTip);
+        ui->label_InfoTip->setText(finishTip);
 
         // 变量重置
         lineStrAll = "";
@@ -419,14 +392,14 @@ void TestSuite::createTestSuite()
         scriptCount = 0;
     }
 
-    ui->label_Tip->setText("所有模块创建完毕");
+    ui->label_InfoTip->setText("所有模块创建完毕");
 }
 
 // 文件查找与更新
 void TestSuite::SearchFiles_and_UpdateTreeWidget()
 {
-    QIcon ico_folder(":/ico/icon/folder.ico");
-    QIcon ico_file(":/ico/icon/file.ico");
+    QIcon ico_folder(":/icon/folder.ico");
+    QIcon ico_file(":/icon/icons8-file-64.png");
     QMap<QString, QStringList> mapDirFiles;
     GBKFileIO io;
 
@@ -446,39 +419,49 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
         // 往容器里添 目录  目录中所有的文件
         mapDirFiles[it.fileInfo().dir().absolutePath()] << it.filePath();
     }
-
-    // 遍历容器内容，并插入到对应目录树
-    QMap<QString, QStringList>::iterator i = mapDirFiles.begin();
-    while (i != mapDirFiles.end())
+    if (!mapDirFiles.isEmpty())
     {
-        QTreeWidgetItem *topItem = new QTreeWidgetItem(ui->treeWidget_SearchResult);
-        topItem->setIcon(0, ico_folder);
-        topItem->setText(0, i.key());
 
-        for (const QString &file : i.value())
+        // 遍历容器内容，并插入到对应目录树
+        QMap<QString, QStringList>::iterator i = mapDirFiles.begin();
+        while (i != mapDirFiles.end())
         {
-            QTreeWidgetItem *item = new QTreeWidgetItem(topItem);
-            QFileInfo fileInfo(file);
-            item->setText(0, fileInfo.fileName());
-            item->setIcon(0, ico_file);
-            if (
-                !fileInfo.fileName().contains("setup", Qt::CaseInsensitive) &&
-                !fileInfo.fileName().contains("clear", Qt::CaseInsensitive) &&
-                !fileInfo.fileName().contains("PATCH", Qt::CaseInsensitive) &&
-                !fileInfo.fileName().contains("JOJO", Qt::CaseInsensitive) &&
-                !fileInfo.fileName().contains("DIO", Qt::CaseInsensitive) &&
-                !fileInfo.fileName().contains("CustomFunction", Qt::CaseInsensitive))
+            QTreeWidgetItem *topItem = new QTreeWidgetItem(ui->treeWidget_SearchResult);
+            topItem->setIcon(0, ico_folder);
+            topItem->setText(0, i.key());
+
+            for (const QString &file : i.value())
             {
-                item->setCheckState(0, Qt::Checked);
+                QTreeWidgetItem *item = new QTreeWidgetItem(topItem);
+                QFileInfo fileInfo(file);
+                item->setText(0, fileInfo.fileName());
+                item->setIcon(0, ico_file);
+                if (
+                    !fileInfo.fileName().contains("setup", Qt::CaseInsensitive) &&
+                    !fileInfo.fileName().contains("clear", Qt::CaseInsensitive) &&
+                    !fileInfo.fileName().contains("PATCH", Qt::CaseInsensitive) &&
+                    !fileInfo.fileName().contains("JOJO", Qt::CaseInsensitive) &&
+                    !fileInfo.fileName().contains("DIO", Qt::CaseInsensitive) &&
+                    !fileInfo.fileName().contains("CustomFunction", Qt::CaseInsensitive))
+                {
+                    item->setCheckState(0, Qt::Checked);
+                }
+                else
+                {
+                    item->setCheckState(0, Qt::Unchecked);
+                }
+                item->setToolTip(0, io.readFile(file).mid(0, 1000));
             }
-            else
-            {
-                item->setCheckState(0, Qt::Unchecked);
-            }
-            item->setToolTip(0, io.readFile(file).mid(0,1000));
+            ++i;
         }
-        ++i;
+        ui->treeWidget_SearchResult->expandAll();
+        ui->pushButton_Create->setEnabled(true);
     }
-    ui->treeWidget_SearchResult->expandAll();
-    ui->pushButton_Create->setEnabled(true);
+    else
+    {
+
+        ui->label_InfoTip->setText("请选则文件夹");
+        QTimer::singleShot(500, this, [&]()
+                           { ui->label_InfoTip->setText(""); });
+    }
 }

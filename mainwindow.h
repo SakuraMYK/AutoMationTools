@@ -7,6 +7,7 @@
 #include "testsuite.h"
 #include "loganalysis.h"
 #include "debuginfo.h"
+#include "totaltestsuite.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -26,6 +27,7 @@ private:
     Ui::MainWindow *ui;
     QStackedWidget *stackedWidget;
     TestSuite *testSuite;
+    TotalTestSuite *totalTestSuite;
     LogAnalysis *logAnalysis;
     DebugInfo *debugInfo;
     static MainWindow* instance;

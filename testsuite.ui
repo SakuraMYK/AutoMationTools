@@ -26,12 +26,32 @@
          <property name="text">
           <string/>
          </property>
+         <property name="icon">
+          <iconset resource="icon.qrc">
+           <normaloff>:/icon/folder_open.ico</normaloff>:/icon/folder_open.ico</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>29</width>
+           <height>29</height>
+          </size>
+         </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_Search">
          <property name="text">
           <string>查找</string>
+         </property>
+         <property name="icon">
+          <iconset resource="icon.qrc">
+           <normaloff>:/icon/icons8-view-100.png</normaloff>:/icon/icons8-view-100.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>29</width>
+           <height>29</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -55,17 +75,6 @@
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <item>
-              <widget class="QCheckBox" name="checkBox_TestSuite">
-               <property name="text">
-                <string>测试集</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item>
             <widget class="QPushButton" name="pushButton_Create">
              <property name="sizePolicy">
@@ -168,12 +177,12 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="label_Tip">
+      <widget class="QLabel" name="label_InfoTip">
        <property name="text">
         <string/>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>

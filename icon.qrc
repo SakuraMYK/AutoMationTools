@@ -12,7 +12,6 @@
         <file>icon/log.ico</file>
         <file>icon/log_2.png</file>
         <file>icon/select.ico</file>
-        <file>icon/tcl.ico</file>
         <file>icon/winTitle.ico</file>
         <file>icon/icons8-create-64.png</file>
         <file>icon/icons8-view-100.png</file>
@@ -44,6 +43,5 @@
         <file>icon/icons8-download-100.png</file>
         <file>icon/icons8-download-64.png</file>
         <file>icon/icons8-excel-128.png</file>
-        <file>icon/state-remote-installer.exe</file>
     </qresource>
 </RCC>

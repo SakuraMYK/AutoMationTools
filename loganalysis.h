@@ -14,6 +14,7 @@
 #include <QIcon>
 #include <QAxObject>
 #include <QAxWidget>
+#include <QTimer>
 
 namespace Ui
 {
@@ -28,6 +29,7 @@ class LogAnalysis : public QWidget
 private:
     Ui::LogAnalysis *ui;
     QString historicalPath;
+    QString exportExcelPath;
     bool isExpandAll;
     int progressDialog_Count;
     float total_UseTime;

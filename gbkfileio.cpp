@@ -6,6 +6,11 @@ GBKFileIO::GBKFileIO()
 
 }
 
+GBKFileIO::~GBKFileIO()
+{
+
+}
+
 // 文件内容读取（按照GBK编码进行读取）
 QString GBKFileIO::readFile(const QString &filePath)
 {
@@ -20,7 +25,7 @@ QString GBKFileIO::readFile(const QString &filePath)
     }
     else
     {
-        qDebug() << filePath << "open failed !";
+        qDebug() <<__func__ << filePath << "open failed !";
         return QString();
     }
 }
@@ -38,6 +43,6 @@ void GBKFileIO::writeFile(const QString &filePath, const QString &Content)
     }
     else
     {
-        qDebug() << filePath << "open failed !";
+        qDebug()<<__func__ << filePath << "open failed !";
     }
 }

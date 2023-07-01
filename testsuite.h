@@ -9,6 +9,8 @@
 #include <QFileDialog>
 #include <gbkfileio.h>
 #include <QDirIterator>
+#include <QTimer>
+
 namespace Ui
 {
     class TestSuite;
@@ -28,7 +30,6 @@ public:
     void initCheckBox();
     void initLineEdit();
     void initComboBox();
-    void initTimer();
     void initTreeWidget();
     void initPushButton();
     void createTotalTestSuite();

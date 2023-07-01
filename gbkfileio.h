@@ -12,6 +12,7 @@ class GBKFileIO
 {
 public:
     GBKFileIO();
+    ~GBKFileIO();
     QString readFile(const QString &filePath);
     void writeFile(const QString &filePath, const QString &Content);
 };

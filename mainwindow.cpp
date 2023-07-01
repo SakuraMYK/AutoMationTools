@@ -11,11 +11,12 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowIcon(QIcon(":/icon/winTitle.ico"));
 
     testSuite = nullptr;
+    totalTestSuite =nullptr;
     logAnalysis = nullptr;
     debugInfo = new DebugInfo();
 
     // 连接菜单按钮到对应的槽函数
-    connect(ui->action_Create_Test_Case_Suite, &QAction::triggered, this, [&]()
+    connect(ui->actionCreate_Test_Case_Suite, &QAction::triggered, this, [&]()
             {
             if (!testSuite)
             {
@@ -26,7 +27,18 @@ MainWindow::MainWindow(QWidget *parent)
             this->setCentralWidget(stackedWidget);
     });
 
-    connect(ui->action_Log_Analysis, &QAction::triggered, this, [&]()
+    connect(ui->actionCreate_Total_Test_Case_Suite, &QAction::triggered, this, [&]()
+            {
+                if (!totalTestSuite)
+                {
+                    totalTestSuite = new TotalTestSuite(this);
+                    stackedWidget->addWidget(totalTestSuite);
+                }
+                stackedWidget->setCurrentWidget(totalTestSuite);
+                this->setCentralWidget(stackedWidget);
+            });
+
+    connect(ui->actionLog_Analysis, &QAction::triggered, this, [&]()
             {
                 if (!logAnalysis)
                 {

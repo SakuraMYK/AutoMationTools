@@ -27,8 +27,9 @@
     <property name="title">
      <string>功能</string>
     </property>
-    <addaction name="action_Create_Test_Case_Suite"/>
-    <addaction name="action_Log_Analysis"/>
+    <addaction name="actionCreate_Test_Case_Suite"/>
+    <addaction name="actionCreate_Total_Test_Case_Suite"/>
+    <addaction name="actionLog_Analysis"/>
    </widget>
    <widget class="QMenu" name="menudebug">
     <property name="title">
@@ -39,7 +40,7 @@
    <addaction name="menu"/>
    <addaction name="menudebug"/>
   </widget>
-  <action name="action_Create_Test_Case_Suite">
+  <action name="actionCreate_Test_Case_Suite">
    <property name="icon">
     <iconset resource="icon.qrc">
      <normaloff>:/icon/icons8-create-64.png</normaloff>:/icon/icons8-create-64.png</iconset>
@@ -48,7 +49,7 @@
     <string>Create Test Case Suite</string>
    </property>
   </action>
-  <action name="action_Log_Analysis">
+  <action name="actionLog_Analysis">
    <property name="icon">
     <iconset theme="accessories-text-editor" resource="icon.qrc">
      <normaloff>:/icon/icons8-view-64 (1).png</normaloff>:/icon/icons8-view-64 (1).png</iconset>
@@ -64,6 +65,15 @@
    </property>
    <property name="text">
     <string>debug</string>
+   </property>
+  </action>
+  <action name="actionCreate_Total_Test_Case_Suite">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/icon/icons8-create-64.png</normaloff>:/icon/icons8-create-64.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create Total Test Case Suite</string>
    </property>
   </action>
  </widget>

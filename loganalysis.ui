@@ -28,12 +28,32 @@
            <property name="text">
             <string/>
            </property>
+           <property name="icon">
+            <iconset resource="icon.qrc">
+             <normaloff>:/icon/folder_open.ico</normaloff>:/icon/folder_open.ico</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>29</width>
+             <height>29</height>
+            </size>
+           </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_Statistics">
            <property name="text">
             <string>统计</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icon.qrc">
+             <normaloff>:/icon/icons8-view-64 (1).png</normaloff>:/icon/icons8-view-64 (1).png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>29</width>
+             <height>29</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -44,12 +64,12 @@
            </property>
            <property name="icon">
             <iconset resource="icon.qrc">
-             <normaloff>:/icon/icons8-download-64.png</normaloff>:/icon/icons8-download-64.png</iconset>
+             <normaloff>:/icon/icons8-download-100.png</normaloff>:/icon/icons8-download-100.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>29</width>
+             <height>29</height>
             </size>
            </property>
           </widget>
@@ -176,6 +196,13 @@
            <string/>
           </property>
          </column>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_InfoTip">
+         <property name="text">
+          <string/>
+         </property>
         </widget>
        </item>
       </layout>
