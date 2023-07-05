@@ -395,6 +395,8 @@ void TestSuite::createTestSuite()
     ui->label_InfoTip->setText("所有模块创建完毕");
 }
 
+#include "probar.h"
+
 // 文件查找与更新
 void TestSuite::SearchFiles_and_UpdateTreeWidget()
 {
@@ -412,13 +414,40 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
 
     QDirIterator it(dir, QDirIterator::Subdirectories);
 
+    int count = 0;
     // 迭代遍历所有目录下的文件、以及子目录下的文件（迭代器默认只遍历文件）
     while (it.hasNext())
     {
         it.next();
         // 往容器里添 目录  目录中所有的文件
         mapDirFiles[it.fileInfo().dir().absolutePath()] << it.filePath();
+        ++count;
     }
+
+//    Probar probar(this,count);
+
+    QProgressDialog *p = new QProgressDialog(this);
+    p->setCancelButtonText("Cancel");
+    p->setLabelText("遍历文件...");
+    p->setWindowModality(Qt::WindowModal);
+    p->setAutoClose(true);
+    p->setAutoReset(true);
+    p->autoReset();
+    p->setMaximum(count);
+    p->setMinimumDuration(0);
+    p->setStyleSheet("QProgressBar {"
+                     "    border-radius: 7px;"
+                     "    border: 3px solid  #4CE637;"
+                     "    height: 20px;"
+                     "    border-radius: 13px;"
+                     "    text-align: center;"
+                     "}"
+                     "QProgressBar::chunk {"
+                     "    background-color: #FAE63C;"
+                     "    margin: 6px;" // 向内缩小涂色部分
+                     "}");
+
+    count = 0;
     if (!mapDirFiles.isEmpty())
     {
 
@@ -426,12 +455,15 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
         QMap<QString, QStringList>::iterator i = mapDirFiles.begin();
         while (i != mapDirFiles.end())
         {
+
             QTreeWidgetItem *topItem = new QTreeWidgetItem(ui->treeWidget_SearchResult);
             topItem->setIcon(0, ico_folder);
             topItem->setText(0, i.key());
 
             for (const QString &file : i.value())
             {
+                ++count;
+                p->setLabelText(file);
                 QTreeWidgetItem *item = new QTreeWidgetItem(topItem);
                 QFileInfo fileInfo(file);
                 item->setText(0, fileInfo.fileName());
@@ -456,6 +488,7 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
         }
         ui->treeWidget_SearchResult->expandAll();
         ui->pushButton_Create->setEnabled(true);
+        delete p;
     }
     else
     {

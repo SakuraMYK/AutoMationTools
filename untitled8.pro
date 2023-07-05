@@ -14,6 +14,7 @@ SOURCES += \
     loganalysis.cpp \
     main.cpp \
     mainwindow.cpp \
+    probar.cpp \
     testsuite.cpp \
     totaltestsuite.cpp
 
@@ -22,6 +23,7 @@ HEADERS += \
     gbkfileio.h \
     loganalysis.h \
     mainwindow.h \
+    probar.h \
     testsuite.h \
     totaltestsuite.h
 

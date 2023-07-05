@@ -251,7 +251,7 @@ QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
 {
     QDir *Dir = new QDir(dir);
     QStringList testSuite;
-
+    static QRegularExpression re_IsTstName("_\\d+_\\d+_\\d+");
     // 默认不对topos文件夹进行检索，以避免无意义的log搜索，以提高性能
     if (Dir->dirName() == "topos")
     {
@@ -263,12 +263,19 @@ QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
     QStringList newXmlNameList;
     for (const QString &xmlName : xmlNameList)
     {
+
         if (
             !xmlName.contains("setup", Qt::CaseInsensitive) &&
             !xmlName.contains("clear", Qt::CaseInsensitive) &&
             !xmlName.contains("TestMaster", Qt::CaseInsensitive))
+
         {
-            newXmlNameList << xmlName;
+                if(!re_IsTstName.match(xmlName).hasMatch())
+            {
+                newXmlNameList << xmlName;
+            }
+
+
         }
     }
 
@@ -500,6 +507,31 @@ QProgressDialog *LogAnalysis::progressDialog()
                      "    margin: 6px;" // 向内缩小涂色部分
                      "}");
     return p;
+}
+
+QString LogAnalysis::readFile(const QString &filePath)
+{
+    QFile file(filePath);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << __func__ << "Warning: Failed to open the file" << filePath;
+        return QString();
+    }
+
+    QTextStream in(&file);
+    QString content;
+
+    while (!in.atEnd())
+    {
+        QString line = in.readLine();
+        content += line + "\n"; // 可以根据需求添加换行符
+    }
+
+    file.close();
+
+    return content;
+
 }
 
 // 更新TreeWigdet最后一行的item，即更新总计

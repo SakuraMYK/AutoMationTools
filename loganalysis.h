@@ -76,6 +76,7 @@ public:
     QStringList getAllTestSuiteXML(const QString &dir);
     QMap<QString, QMap<QString, QVariant>> traverseDirCreateTstMap();
     QProgressDialog* progressDialog();
+    QString readFile(const QString&filePath);
 
     void updateTreeWidget();
     void openFile(const QString &filePath, FileOperator fileOperator);
