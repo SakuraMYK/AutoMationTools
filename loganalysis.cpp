@@ -22,15 +22,7 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
     connect(ui->pushButton_Statistics, &QPushButton::clicked, this, &LogAnalysis::updateTreeWidget);
 
     connect(ui->pushButton_SelectDir, &QPushButton::clicked, this, [&]()
-            {
-                if  (historicalPath.isEmpty()){
-                    historicalPath = "./";
-                }
-                historicalPath = QFileDialog::getExistingDirectory(this, "选择log文件夹", historicalPath);
-                if(!historicalPath.isEmpty())
-                    {
-                    ui->lineEdit_Dir->setText(historicalPath);
-                } });
+            {ui->comboBox_selectDir->addItem( QFileDialog::getExistingDirectory(this, "选择log文件夹"));});
 
     connect(ui->pushButton_ExpandAll, &QPushButton::clicked, this, [&]()
             {
@@ -49,6 +41,7 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
                     isExpandAll = false;
                 } });
 
+
     // 为首行的每一格文本居中对齐
     for (int i = 0; i < ui->treeWidget_SearchResult->columnCount(); ++i)
     {
@@ -66,7 +59,6 @@ LogAnalysis::LogAnalysis(QWidget *parent) : QWidget(parent), ui(new Ui::LogAnaly
     // 将右键菜单关联到树形控件的每个项
     ui->treeWidget_SearchResult->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    ui->lineEdit_Dir->setText("D:\\log");
 
     // setSectionsClickable 需要开启，不然 QHeaderView::sectionClicked信号将无法触发
     ui->treeWidget_SearchResult->header()->setSectionsClickable(true);
@@ -111,6 +103,7 @@ void LogAnalysis::openFile(const QString &filePath, FileOperator fileOperator = 
 // 抓取测试套的log信息
 QMap<QString, QString> LogAnalysis::getTestSuiteLogInfo(const QString &xml)
 {
+
     QMap<QString, QString> map;
     QFile file(xml);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -270,12 +263,10 @@ QStringList LogAnalysis::getAllTestSuiteXML(const QString &dir)
             !xmlName.contains("TestMaster", Qt::CaseInsensitive))
 
         {
-                if(!re_IsTstName.match(xmlName).hasMatch())
+            if (!re_IsTstName.match(xmlName).hasMatch())
             {
                 newXmlNameList << xmlName;
             }
-
-
         }
     }
 
@@ -363,8 +354,7 @@ void LogAnalysis::onTriggered(const QPoint &pos)
                     }
 
                     delete item;
-                    updateTreeWidget();
-        });
+                    updateTreeWidget(); });
 
         connect(actionOpenXml, &QAction::triggered, this, [=]()
                 { openFile(item->data(column::XmlPath, Qt::UserRole).toString(), FileOperator::OpenWithIE); });
@@ -435,7 +425,8 @@ void LogAnalysis::onTriggered(const QPoint &pos)
 // 遍历目录并生成Tst映射字典(包含子目录)
 QMap<QString, QMap<QString, QVariant>> LogAnalysis::traverseDirCreateTstMap()
 {
-    QDir dir(ui->lineEdit_Dir->text());
+
+    QDir dir(ui->comboBox_selectDir->currentText());
     dir.setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
     QDirIterator directory(dir, QDirIterator::Subdirectories);
     QMap<QString, QMap<QString, QVariant>> map;
@@ -531,7 +522,6 @@ QString LogAnalysis::readFile(const QString &filePath)
     file.close();
 
     return content;
-
 }
 
 // 更新TreeWigdet最后一行的item，即更新总计
@@ -725,9 +715,12 @@ void LogAnalysis::exportExcel()
     }
 }
 
+
 // 刷新tree控件数据
 void LogAnalysis::updateTreeWidget()
 {
+//    刷新历史路径
+    updateHistoryPath();
     ui->treeWidget_SearchResult->clear();
 
     total_UseTime = 0;
@@ -921,4 +914,21 @@ void LogAnalysis::updateTreeWidget()
 
     // 删除进度条
     delete probar;
+}
+
+void LogAnalysis::updateHistoryPath()
+{
+    historicalPath.append(ui->comboBox_selectDir->currentText());
+    QStringList newList;
+    std::reverse(historicalPath.begin(),historicalPath.end());
+    for (const QString &text : historicalPath) {
+        if(!newList.contains(text)){
+            newList.append(text);
+        }
+    }
+    historicalPath = newList;
+    ui->comboBox_selectDir->clear();
+    ui->comboBox_selectDir->addItems(historicalPath);
+
+    qDebug()<<"historicalPath: "<<historicalPath;
 }

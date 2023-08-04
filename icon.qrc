@@ -43,5 +43,14 @@
         <file>icon/icons8-download-100.png</file>
         <file>icon/icons8-download-64.png</file>
         <file>icon/icons8-excel-128.png</file>
+        <file>icon/icons8-excel-50.png</file>
+        <file>icon/icons8-sort-by-modified-date-48.png</file>
+        <file>icon/icons8-list-50.png</file>
+        <file>icon/icons8-list-48.png</file>
+        <file>icon/icons8-topology-68.png</file>
+        <file>icon/icons8-done-48.png</file>
+        <file>icon/icons8-done-64.png</file>
+        <file>icon/icons8-checkmark-96.png</file>
+        <file>icon/icons8-circle-96.png</file>
     </qresource>
 </RCC>

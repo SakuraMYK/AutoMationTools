@@ -6,9 +6,9 @@
 #include <QDateTime>
 #include <QIcon>
 
-
-namespace Ui {
-class DebugInfo;
+namespace Ui
+{
+    class DebugInfo;
 }
 
 class DebugInfo : public QWidget
@@ -18,12 +18,10 @@ class DebugInfo : public QWidget
 public:
     explicit DebugInfo(QWidget *parent = nullptr);
     ~DebugInfo();
-    void append(const QString&text);
-
+    void append(const QString &text);
 
 private:
     Ui::DebugInfo *ui;
-
 };
 
 #endif // DEBUGINFO_H

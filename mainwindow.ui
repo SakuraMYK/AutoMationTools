@@ -30,6 +30,8 @@
     <addaction name="actionCreate_Test_Case_Suite"/>
     <addaction name="actionCreate_Total_Test_Case_Suite"/>
     <addaction name="actionLog_Analysis"/>
+    <addaction name="actionCreate_Scripts_From_Excel"/>
+    <addaction name="actionWindows"/>
    </widget>
    <widget class="QMenu" name="menudebug">
     <property name="title">
@@ -74,6 +76,20 @@
    </property>
    <property name="text">
     <string>Create Total Test Case Suite</string>
+   </property>
+  </action>
+  <action name="actionCreate_Scripts_From_Excel">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/icon/icons8-excel-128.png</normaloff>:/icon/icons8-excel-128.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create Scripts From Excel</string>
+   </property>
+  </action>
+  <action name="actionWindows">
+   <property name="text">
+    <string>Windows</string>
    </property>
   </action>
  </widget>

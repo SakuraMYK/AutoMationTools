@@ -13,207 +13,257 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLineEdit" name="lineEdit_Dir"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_SelectDir">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="icon.qrc">
-             <normaloff>:/icon/folder_open.ico</normaloff>:/icon/folder_open.ico</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>29</width>
-             <height>29</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_Statistics">
-           <property name="text">
-            <string>统计</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icon.qrc">
-             <normaloff>:/icon/icons8-view-64 (1).png</normaloff>:/icon/icons8-view-64 (1).png</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>29</width>
-             <height>29</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_ExportExcel">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="icon.qrc">
-             <normaloff>:/icon/icons8-download-100.png</normaloff>:/icon/icons8-download-100.png</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>29</width>
-             <height>29</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QPushButton" name="pushButton_ExpandAll">
-           <property name="text">
-            <string>展开</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icon.qrc">
-             <normaloff>:/icon/Expand.ico</normaloff>:/icon/Expand.ico</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_OpenExcel">
-           <property name="text">
-            <string>打开</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icon.qrc">
-             <normaloff>:/icon/icons8-excel-128.png</normaloff>:/icon/icons8-excel-128.png</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>26</width>
-             <height>26</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QTreeWidget" name="treeWidget_SearchResult">
-         <property name="toolTipDuration">
-          <number>-1</number>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="autoFillBackground">
-          <bool>false</bool>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>false</bool>
-         </property>
-         <property name="textElideMode">
-          <enum>Qt::ElideLeft</enum>
-         </property>
-         <attribute name="headerMinimumSectionSize">
-          <number>38</number>
-         </attribute>
-         <column>
-          <property name="text">
-           <string>   测试集   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   开始时间  </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>       用时       </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   总数   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   OK   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   NG   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   ER   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   InvalidHead  </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   通过率  </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>   core   </string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string/>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_InfoTip">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QWidget" name="splitterContainer" native="true"/>
-     </item>
-     <item>
-      <widget class="QWidget" name="widget_JOJO" native="true"/>
-     </item>
-    </layout>
+  <property name="styleSheet">
+   <string notr="true">
+
+QWidget {
+font: 14pt &quot;UD Digi Kyokasho N-R&quot;;
+}
+
+  </string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QWidget" name="widget" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QComboBox" name="comboBox_selectDir">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_SelectDir">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="icon.qrc">
+          <normaloff>:/icon/folder_open.ico</normaloff>:/icon/folder_open.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>29</width>
+          <height>29</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_Statistics">
+        <property name="text">
+         <string>统计</string>
+        </property>
+        <property name="icon">
+         <iconset resource="icon.qrc">
+          <normaloff>:/icon/icons8-view-64 (1).png</normaloff>:/icon/icons8-view-64 (1).png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>29</width>
+          <height>29</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_ExportExcel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="icon.qrc">
+          <normaloff>:/icon/icons8-download-100.png</normaloff>:/icon/icons8-download-100.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>29</width>
+          <height>29</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="pushButton_ExpandAll">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>199</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>展开</string>
+        </property>
+        <property name="icon">
+         <iconset resource="icon.qrc">
+          <normaloff>:/icon/Expand.ico</normaloff>:/icon/Expand.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_OpenExcel">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>199</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>打开</string>
+        </property>
+        <property name="icon">
+         <iconset resource="icon.qrc">
+          <normaloff>:/icon/icons8-excel-128.png</normaloff>:/icon/icons8-excel-128.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTreeWidget" name="treeWidget_SearchResult">
+     <property name="toolTipDuration">
+      <number>-1</number>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 10pt &quot;Microsoft YaHei UI&quot;;</string>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>false</bool>
+     </property>
+     <property name="textElideMode">
+      <enum>Qt::ElideLeft</enum>
+     </property>
+     <attribute name="headerMinimumSectionSize">
+      <number>38</number>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>   测试集   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   开始时间  </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>       用时       </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   总数   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   OK   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   NG   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   ER   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   InvalidHead  </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   通过率  </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>   core   </string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string/>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_InfoTip">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

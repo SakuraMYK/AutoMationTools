@@ -10,6 +10,7 @@
 #include <gbkfileio.h>
 #include <QDirIterator>
 #include <QTimer>
+#include <QProgressDialog>
 
 namespace Ui
 {
@@ -28,7 +29,6 @@ public:
     void itemEntered(QTreeWidgetItem *item, int column);
     void updateSelectFileTip();
     void initCheckBox();
-    void initLineEdit();
     void initComboBox();
     void initTreeWidget();
     void initPushButton();

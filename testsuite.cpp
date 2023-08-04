@@ -5,7 +5,6 @@ TestSuite::TestSuite(QWidget *parent)
     : QWidget(parent), ui(new Ui::TestSuite)
 {
     ui->setupUi(this);
-    initLineEdit();
     initComboBox();
     initTreeWidget();
     initPushButton();
@@ -84,7 +83,7 @@ void TestSuite::itemChanged(QTreeWidgetItem *item, int column)
         }
         else
         {
-                        qDebug() << "item:" << item << "column:" <<column << "has no parent object";
+            qDebug() << "item:" << item << "column:" << column << "has no parent object";
         }
     }
     updateSelectFileTip();
@@ -165,10 +164,6 @@ void TestSuite::initCheckBox()
     ui->checkBox_Optimized->setToolTip("<span style='font-size:12pt;'>topo优化执行</span>");
     ui->checkBox_Shutdown->setToolTip("<span style='font-size:12pt;'>每次测试集跑完时shutdown接口</span>");
     ui->checkBox_Separator->setToolTip("<span style='font-size:12pt;'>每隔一定数量位置添加一行分隔符</span>");
-}
-
-void TestSuite::initLineEdit()
-{
 }
 
 void TestSuite::initComboBox()
@@ -395,8 +390,6 @@ void TestSuite::createTestSuite()
     ui->label_InfoTip->setText("所有模块创建完毕");
 }
 
-#include "probar.h"
-
 // 文件查找与更新
 void TestSuite::SearchFiles_and_UpdateTreeWidget()
 {
@@ -423,8 +416,6 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
         mapDirFiles[it.fileInfo().dir().absolutePath()] << it.filePath();
         ++count;
     }
-
-//    Probar probar(this,count);
 
     QProgressDialog *p = new QProgressDialog(this);
     p->setCancelButtonText("Cancel");
@@ -497,4 +488,5 @@ void TestSuite::SearchFiles_and_UpdateTreeWidget()
         QTimer::singleShot(500, this, [&]()
                            { ui->label_InfoTip->setText(""); });
     }
+    ui->treeWidget_SearchResult->expandAll();
 }

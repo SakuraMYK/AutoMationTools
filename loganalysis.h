@@ -25,10 +25,9 @@ class LogAnalysis : public QWidget
 {
     Q_OBJECT
 
-
 private:
     Ui::LogAnalysis *ui;
-    QString historicalPath;
+    QStringList historicalPath;
     QString exportExcelPath;
     bool isExpandAll;
     int progressDialog_Count;
@@ -75,8 +74,8 @@ public:
     QMap<QString, QStringList> getAllScriptInfoFromTestSuiteLog(const QString &xmlPath);
     QStringList getAllTestSuiteXML(const QString &dir);
     QMap<QString, QMap<QString, QVariant>> traverseDirCreateTstMap();
-    QProgressDialog* progressDialog();
-    QString readFile(const QString&filePath);
+    QProgressDialog *progressDialog();
+    QString readFile(const QString &filePath);
 
     void updateTreeWidget();
     void openFile(const QString &filePath, FileOperator fileOperator);
@@ -84,8 +83,7 @@ public:
     void updateItemTotal();
     void sortItems(int column);
     void exportExcel();
-
+    void updateHistoryPath();
 };
-
 
 #endif // LOGANALYSIS_H

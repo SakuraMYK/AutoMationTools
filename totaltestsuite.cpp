@@ -83,6 +83,7 @@ void TotalTestSuite::updateTreeWidget()
         connect(ui->treeWidget_SearchReslut, &QTreeWidget::itemChanged, this, &TotalTestSuite::itemChanged);
         isItemChangedFirstConnect = false;
     }
+    ui->treeWidget_SearchReslut->expandAll();
 }
 
 // 根据 checkState 更新勾选项

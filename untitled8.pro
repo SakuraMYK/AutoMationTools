@@ -10,29 +10,33 @@ CONFIG += c++17
 
 SOURCES += \
     debuginfo.cpp \
+    excelscripter.cpp \
     gbkfileio.cpp \
     loganalysis.cpp \
     main.cpp \
     mainwindow.cpp \
-    probar.cpp \
     testsuite.cpp \
-    totaltestsuite.cpp
+    totaltestsuite.cpp \
+    windowshwnd.cpp
 
 HEADERS += \
     debuginfo.h \
+    excelscripter.h \
     gbkfileio.h \
     loganalysis.h \
     mainwindow.h \
-    probar.h \
     testsuite.h \
-    totaltestsuite.h
+    totaltestsuite.h \
+    windowshwnd.h
 
 FORMS += \
     debuginfo.ui \
+    excelscripter.ui \
     loganalysis.ui \
     mainwindow.ui \
     testsuite.ui \
-    totaltestsuite.ui
+    totaltestsuite.ui \
+    windowshwnd.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
